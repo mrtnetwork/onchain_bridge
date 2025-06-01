@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge
+package com.mrtnetwork.on_chain_bridge
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

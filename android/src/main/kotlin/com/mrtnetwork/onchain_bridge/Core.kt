@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge
+package com.mrtnetwork.on_chain_bridge
 
 import android.app.Activity
 import android.content.Context

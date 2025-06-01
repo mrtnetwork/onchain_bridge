@@ -1,15 +1,15 @@
-package com.mrtnetwork.onchain_bridge
+package com.mrtnetwork.on_chain_bridge
 
 import android.companion.CompanionDeviceManager.RESULT_CANCELED
 import android.companion.CompanionDeviceManager.RESULT_OK
 import android.content.Intent
 import com.google.zxing.client.android.Intents
 import com.journeyapps.barcodescanner.ScanOptions
-import com.mrtnetwork.onchain_bridge.barcode.CaptureActivityPortrait
-import com.mrtnetwork.onchain_bridge.connection.NetworkEvent
-import com.mrtnetwork.onchain_bridge.encryptions.EncryptionImpl
-import com.mrtnetwork.onchain_bridge.share.ShareImpl
-import com.mrtnetwork.onchain_bridge.webview.WebViewInterface
+import com.mrtnetwork.on_chain_bridge.barcode.CaptureActivityPortrait
+import com.mrtnetwork.on_chain_bridge.connection.NetworkEvent
+import com.mrtnetwork.on_chain_bridge.encryptions.EncryptionImpl
+import com.mrtnetwork.on_chain_bridge.share.ShareImpl
+import com.mrtnetwork.on_chain_bridge.webview.WebViewInterface
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.embedding.engine.plugins.service.ServiceAware

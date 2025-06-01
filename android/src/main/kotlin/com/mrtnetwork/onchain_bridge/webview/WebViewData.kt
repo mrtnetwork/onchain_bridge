@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge.webview
+package com.mrtnetwork.on_chain_bridge.webview
 
 data class WebViewData(
     val id: String, val eventName: String, val url: String? = null,

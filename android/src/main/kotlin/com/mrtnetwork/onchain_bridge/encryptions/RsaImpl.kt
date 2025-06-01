@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge.encryptions
+package com.mrtnetwork.on_chain_bridge.encryptions
 
 import android.content.Context
 import android.content.res.Configuration

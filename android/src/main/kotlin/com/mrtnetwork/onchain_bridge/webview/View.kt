@@ -1,10 +1,10 @@
-package com.mrtnetwork.onchain_bridge.webview
+package com.mrtnetwork.on_chain_bridge.webview
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.View
 import android.webkit.WebView
-import com.mrtnetwork.onchain_bridge.OnChainCore
+import com.mrtnetwork.on_chain_bridge.OnChainCore
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 

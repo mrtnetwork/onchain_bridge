@@ -1,6 +1,6 @@
 class AtomicMap<Key: Hashable, Value> {
     private var internalMap: [Key: Value] = [:]
-    private let queue = DispatchQueue(label: "onchain_bridge.atomicMapQueue", attributes: .concurrent)
+    private let queue = DispatchQueue(label: "on_chain_bridge.atomicMapQueue", attributes: .concurrent)
 
     // Method to get a value for a key
     func value(forKey key: Key) -> Value? {

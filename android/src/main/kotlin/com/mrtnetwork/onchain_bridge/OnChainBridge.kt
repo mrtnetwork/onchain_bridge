@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge
+package com.mrtnetwork.on_chain_bridge
 
 import android.app.Activity
 import android.content.Context
@@ -6,10 +6,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
-import com.mrtnetwork.onchain_bridge.connection.ConnectionBroadcast
-import com.mrtnetwork.onchain_bridge.connection.NetworkEvent
-import com.mrtnetwork.onchain_bridge.encryptions.EncryptionImpl
-import com.mrtnetwork.onchain_bridge.webview.WebViewFactory
+import com.mrtnetwork.on_chain_bridge.connection.ConnectionBroadcast
+import com.mrtnetwork.on_chain_bridge.connection.NetworkEvent
+import com.mrtnetwork.on_chain_bridge.encryptions.EncryptionImpl
+import com.mrtnetwork.on_chain_bridge.webview.WebViewFactory
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

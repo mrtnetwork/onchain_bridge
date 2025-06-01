@@ -1,9 +1,9 @@
 #
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint onchain_bridge.podspec` to validate before publishing.
+# Run `pod lib lint on_chain_bridge.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'onchain_bridge'
+  s.name             = 'on_chain_bridge'
   s.version          = '0.0.1'
   s.summary          = 'platform-specific native methods required for key functionalities within the OnChain ecosystem.'
   s.description      = <<-DESC

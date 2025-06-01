@@ -1,8 +1,8 @@
-package com.mrtnetwork.onchain_bridge.encryptions
+package com.mrtnetwork.on_chain_bridge.encryptions
 
 import android.content.Context
 
-import com.mrtnetwork.onchain_bridge.OnChainCore
+import com.mrtnetwork.on_chain_bridge.OnChainCore
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 

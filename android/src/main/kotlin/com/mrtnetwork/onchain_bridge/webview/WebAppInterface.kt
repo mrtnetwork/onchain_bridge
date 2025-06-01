@@ -1,11 +1,11 @@
-package com.mrtnetwork.onchain_bridge.webview
+package com.mrtnetwork.on_chain_bridge.webview
 
 import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
-import com.mrtnetwork.onchain_bridge.OnChainCore
-import com.mrtnetwork.onchain_bridge.webview.WebViewUtils.Companion.decodeHex
+import com.mrtnetwork.on_chain_bridge.OnChainCore
+import com.mrtnetwork.on_chain_bridge.webview.WebViewUtils.Companion.decodeHex
 import io.flutter.plugin.common.MethodChannel
 
 

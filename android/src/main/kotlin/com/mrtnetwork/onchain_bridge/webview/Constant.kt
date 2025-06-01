@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge.webview
+package com.mrtnetwork.on_chain_bridge.webview
 
 interface WebViewConst {
     companion object{

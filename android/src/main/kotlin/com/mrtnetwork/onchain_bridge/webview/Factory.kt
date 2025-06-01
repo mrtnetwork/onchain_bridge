@@ -1,7 +1,7 @@
-package com.mrtnetwork.onchain_bridge.webview
+package com.mrtnetwork.on_chain_bridge.webview
 
 import android.content.Context
-import com.mrtnetwork.onchain_bridge.OnChainCore
+import com.mrtnetwork.on_chain_bridge.OnChainCore
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StandardMessageCodec

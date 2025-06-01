@@ -1,9 +1,9 @@
-package com.mrtnetwork.onchain_bridge.connection
+package com.mrtnetwork.on_chain_bridge.connection
 
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import com.mrtnetwork.onchain_bridge.AppEvent
+import com.mrtnetwork.on_chain_bridge.AppEvent
 
 
 class NetworkEvent(state: String) : AppEvent(state) {

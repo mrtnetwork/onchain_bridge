@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge.webview
+package com.mrtnetwork.on_chain_bridge.webview
 
 data class WebViewRequest( val id: String,val data:List<Int>, val requestId:String,val type:String){
     fun toJson(): HashMap<String, Any?> {

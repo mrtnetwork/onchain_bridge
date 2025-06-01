@@ -1,8 +1,8 @@
-package com.mrtnetwork.onchain_bridge.share
+package com.mrtnetwork.on_chain_bridge.share
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
-import com.mrtnetwork.onchain_bridge.OnChainCore
+import com.mrtnetwork.on_chain_bridge.OnChainCore
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File

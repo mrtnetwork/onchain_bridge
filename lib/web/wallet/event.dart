@@ -48,7 +48,7 @@ extension type JSWalletEvent._(JSObject o) implements JSOBJ {
           additional: additional,
           platform: platform,
           target: WalletEventTarget.values.firstWhere((e) => e.name == target));
-    } catch (e, s) {
+    } catch (e) {
       return null;
     }
   }

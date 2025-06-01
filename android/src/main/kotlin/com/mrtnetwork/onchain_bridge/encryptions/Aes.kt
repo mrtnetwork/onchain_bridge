@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge.encryptions
+package com.mrtnetwork.on_chain_bridge.encryptions
 
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec

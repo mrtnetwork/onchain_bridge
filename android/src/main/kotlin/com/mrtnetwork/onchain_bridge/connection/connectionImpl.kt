@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge.connection
+package com.mrtnetwork.on_chain_bridge.connection
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,7 +9,7 @@ import android.net.Network
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import com.mrtnetwork.onchain_bridge.OnChainCore
+import com.mrtnetwork.on_chain_bridge.OnChainCore
 
 class ConnectionBroadcast() : BroadcastReceiver() {
     private val mainHandler = Handler(Looper.getMainLooper())

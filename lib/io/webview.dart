@@ -30,6 +30,7 @@ class WebViewIoInterface implements PlatformWebView {
       String message = (args['data'] as String)
           .replaceFirst(r'"\u001b[33m', '')
           .replaceFirst(r'\u001b[0m"', "");
+      // ignore: avoid_print
       print('console: \x1B[38;5;33m$message\x1B[0m');
 
       return;

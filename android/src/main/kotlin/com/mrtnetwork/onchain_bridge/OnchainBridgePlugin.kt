@@ -1,4 +1,4 @@
-package com.mrtnetwork.onchain_bridge
+package com.mrtnetwork.on_chain_bridge
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -15,7 +15,7 @@ class OnchainBridgePlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "onchain_bridge")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "on_chain_bridge")
     channel.setMethodCallHandler(this)
   }
 

@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "include/onchain_bridge/onchain_bridge_plugin.h"
+#include "include/on_chain_bridge/onchain_bridge_plugin.h"
 #include "onchain_bridge_plugin_private.h"
 
 // This demonstrates a simple unit test of the C portion of this plugin's
@@ -13,7 +13,7 @@
 // built for x64 debug, run:
 // $ build/linux/x64/debug/plugins/my_plugin/my_plugin_test
 
-namespace onchain_bridge {
+namespace on_chain_bridge {
 namespace test {
 
 TEST(OnchainBridgePlugin, GetPlatformVersion) {
@@ -28,4 +28,4 @@ TEST(OnchainBridgePlugin, GetPlatformVersion) {
 }
 
 }  // namespace test
-}  // namespace onchain_bridge
+}  // namespace on_chain_bridge
