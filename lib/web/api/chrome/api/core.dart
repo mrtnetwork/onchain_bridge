@@ -1,6 +1,6 @@
 import 'dart:js_interop';
-import 'package:onchain_bridge/web/api/chrome/api/side_pannel.dart';
-import 'package:onchain_bridge/web/api/chrome/api/sidebar_action.dart';
+import 'package:on_chain_bridge/web/api/chrome/api/side_pannel.dart';
+import 'package:on_chain_bridge/web/api/chrome/api/sidebar_action.dart';
 
 import 'storage.dart';
 import 'tabs.dart';

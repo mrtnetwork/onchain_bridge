@@ -1,10 +1,10 @@
 library;
 
-import 'package:onchain_bridge/base.dart'
+import 'package:on_chain_bridge/base.dart'
     if (dart.library.js_interop) 'web/web.dart'
     if (dart.library.io) 'io/io_platforms.dart';
-import 'package:onchain_bridge/models/models.dart';
-import 'onchain_bridge.dart';
+import 'package:on_chain_bridge/models/models.dart';
+import 'on_chain_bridge.dart';
 
 class PlatformInterface {
   static final OnChainBridgeInterface instance = getPlatformInterface();

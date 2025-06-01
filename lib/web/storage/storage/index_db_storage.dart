@@ -3,10 +3,10 @@ import 'dart:js_interop';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:blockchain_utils/crypto/crypto/chacha20poly1305/chacha20poly1305.dart';
-import 'package:onchain_bridge/exception/exception.dart';
-import 'package:onchain_bridge/web/api/window/indexed_db.dart';
-import 'package:onchain_bridge/web/storage/constant/constant.dart';
-import 'package:onchain_bridge/web/storage/storage.dart';
+import 'package:on_chain_bridge/exception/exception.dart';
+import 'package:on_chain_bridge/web/api/window/indexed_db.dart';
+import 'package:on_chain_bridge/web/storage/constant/constant.dart';
+import 'package:on_chain_bridge/web/storage/storage.dart';
 
 enum IndexDbStorageMode { readwrite, readonly, readwriteflush }
 

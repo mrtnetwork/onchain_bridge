@@ -1,4 +1,4 @@
-import 'package:onchain_bridge/models/device/models/platform.dart';
+import 'package:on_chain_bridge/models/device/models/platform.dart';
 
 class PlatformConfig {
   static const int _storageVersion = 1;

@@ -1,3 +1,3 @@
-import 'package:onchain_bridge/models/events/models/events.dart';
+import 'package:on_chain_bridge/models/events/models/events.dart';
 
 typedef NetworkStatusListener = void Function(NetworkEvent);

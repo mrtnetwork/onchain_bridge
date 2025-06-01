@@ -3,12 +3,12 @@ import 'package:blockchain_utils/crypto/quick_crypto.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:blockchain_utils/utils/string/string.dart';
 
-import 'package:onchain_bridge/web/api/api.dart';
-import 'package:onchain_bridge/web/api/window/indexed_db.dart';
-import 'package:onchain_bridge/web/storage/storage/chrome_storage.dart';
-import 'package:onchain_bridge/web/storage/storage/index_db_storage.dart';
-import 'package:onchain_bridge/web/storage/storage/web_storage.dart';
-import 'package:onchain_bridge/web/storage/constant/constant.dart';
+import 'package:on_chain_bridge/web/api/api.dart';
+import 'package:on_chain_bridge/web/api/window/indexed_db.dart';
+import 'package:on_chain_bridge/web/storage/storage/chrome_storage.dart';
+import 'package:on_chain_bridge/web/storage/storage/index_db_storage.dart';
+import 'package:on_chain_bridge/web/storage/storage/web_storage.dart';
+import 'package:on_chain_bridge/web/storage/constant/constant.dart';
 
 import 'storage_item.dart';
 

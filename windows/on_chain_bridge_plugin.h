@@ -1,5 +1,5 @@
-#ifndef FLUTTER_PLUGIN_ONCHAIN_BRIDGE_PLUGIN_H_
-#define FLUTTER_PLUGIN_ONCHAIN_BRIDGE_PLUGIN_H_
+#ifndef FLUTTER_PLUGIN_ON_CHAIN_BRIDGE_PLUGIN_H_
+#define FLUTTER_PLUGIN_ON_CHAIN_BRIDGE_PLUGIN_H_
 
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
@@ -45,7 +45,7 @@
 
 #define APPBAR_CALLBACK WM_USER + 0x01;
 
-namespace onchain_bridge {
+namespace on_chain_bridge {
 
 class OnChainBridge : public flutter::Plugin {
  public:
@@ -161,7 +161,7 @@ private:
     std::optional<std::string> Read(const std::string& key);
 
     flutter::EncodableMap ReadAll();
-
+    flutter::EncodableList ReadKeys(const std::string& prefix);
     void Delete(const std::string& key);
     void DeleteAll();
     bool ContainsKey(const std::string& key);

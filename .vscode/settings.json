@@ -75,5 +75,10 @@
         "string_view": "cpp"
     },
     "git.confirmSync": false,
-    "git.enableStatusBarSync": false
+    "git.enableStatusBarSync": false,
+    "C_Cpp.copilotHover": "disabled",
+    "telemetry.feedback.enabled": false,
+    "chat.agent.enabled": false,
+    "chat.commandCenter.enabled": false,
+    "chat.focusWindowOnConfirmation": false
 }

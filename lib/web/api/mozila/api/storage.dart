@@ -1,6 +1,6 @@
 import 'dart:js_interop';
 
-import 'package:onchain_bridge/web/web.dart';
+import 'package:on_chain_bridge/web/web.dart';
 
 @JS("localStorage")
 external LocalStorage get localStorage;

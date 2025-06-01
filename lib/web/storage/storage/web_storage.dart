@@ -1,6 +1,6 @@
-import 'package:onchain_bridge/web/api/mozila/api/storage.dart';
-import 'package:onchain_bridge/web/storage/safe_storage/safestorage.dart';
-import 'package:onchain_bridge/web/storage/constant/constant.dart';
+import 'package:on_chain_bridge/web/api/mozila/api/storage.dart';
+import 'package:on_chain_bridge/web/storage/safe_storage/safestorage.dart';
+import 'package:on_chain_bridge/web/storage/constant/constant.dart';
 
 class WebStorage extends SafeStorage {
   const WebStorage._(super._chacha);

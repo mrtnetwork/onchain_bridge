@@ -36,7 +36,7 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler, PluginServ
         this.applicationContext = flutterPluginBinding.applicationContext
 
         this.methodChannel = MethodChannel(
-            flutterPluginBinding.binaryMessenger, "com.mrtnetwork.onchain_bridge.methodChannel"
+            flutterPluginBinding.binaryMessenger, "com.mrtnetwork.on_chain_bridge.methodChannel"
         )
         this.methodChannel.setMethodCallHandler(this)
         EncryptionImpl.init(applicationContext)

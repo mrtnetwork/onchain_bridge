@@ -4,12 +4,12 @@ export 'api/api.dart';
 export 'wallet/event.dart';
 export 'storage/storage.dart';
 import 'dart:js_interop';
-import 'package:onchain_bridge/exception/exception.dart';
-import 'package:onchain_bridge/models/models.dart';
-import 'package:onchain_bridge/onchain_bridge.dart';
-import 'package:onchain_bridge/web/api/window/window.dart';
-import 'package:onchain_bridge/web/storage/safe_storage/safestorage.dart';
-import 'package:onchain_bridge/web/storage/storage/index_db_storage.dart';
+import 'package:on_chain_bridge/exception/exception.dart';
+import 'package:on_chain_bridge/models/models.dart';
+import 'package:on_chain_bridge/on_chain_bridge.dart';
+import 'package:on_chain_bridge/web/api/window/window.dart';
+import 'package:on_chain_bridge/web/storage/safe_storage/safestorage.dart';
+import 'package:on_chain_bridge/web/storage/storage/index_db_storage.dart';
 
 OnChainBridgeInterface getPlatformInterface() => WebPlatformInterface._();
 

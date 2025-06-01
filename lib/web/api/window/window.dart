@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
-import 'package:onchain_bridge/web/api/chrome/chrome.dart';
+import 'package:on_chain_bridge/web/api/chrome/chrome.dart';
 
 import 'html.dart';
 import 'media_stream.dart';

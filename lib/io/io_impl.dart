@@ -1,4 +1,4 @@
-part of 'package:onchain_bridge/io/io_platforms.dart';
+part of 'package:on_chain_bridge/io/io_platforms.dart';
 
 class _IoPlatformConst {
   static const String desktopEvent = "onEvent";
@@ -95,7 +95,7 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   Future<List<String>> readKeys({String? prefix}) async {
     final data = await _channel.invokeMethod(
         NativeMethodsConst.secureStorageMethod,
-        {"key": prefix, "type": "readKeys"});
+        {"key": prefix ?? '', "type": "readKeys"});
     return (data as List).cast<String>();
   }
 

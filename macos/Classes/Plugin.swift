@@ -16,7 +16,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,MethodHandler {
     private var barcodeScanner: BarcodeScanner!
     
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "com.mrtnetwork.onchain_bridge.methodChannel", binaryMessenger: registrar.messenger)
+        let channel = FlutterMethodChannel(name: "com.mrtnetwork.on_chain_bridge.methodChannel", binaryMessenger: registrar.messenger)
         let instance = OnChainBridgePlugin(registrar, channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
         

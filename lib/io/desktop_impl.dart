@@ -1,4 +1,4 @@
-part of 'package:onchain_bridge/io/io_platforms.dart';
+part of 'package:on_chain_bridge/io/io_platforms.dart';
 
 class DesktopPlatformInterface implements SpecificPlatfromMethods {
   static const _kWindowEventClose = 'close';

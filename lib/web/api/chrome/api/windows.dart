@@ -1,5 +1,5 @@
 import 'dart:js_interop';
-import 'package:onchain_bridge/web/api/chrome/api/events.dart';
+import 'package:on_chain_bridge/web/api/chrome/api/events.dart';
 
 import 'tabs.dart';
 

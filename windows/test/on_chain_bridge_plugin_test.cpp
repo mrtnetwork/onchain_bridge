@@ -8,9 +8,9 @@
 #include <string>
 #include <variant>
 
-#include "onchain_bridge_plugin.h"
+#include "on_chain_bridge_plugin.h"
 
-namespace onchain_bridge {
+namespace on_chain_bridge {
 namespace test {
 
 namespace {

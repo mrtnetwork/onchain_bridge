@@ -1,4 +1,4 @@
-import 'package:onchain_bridge/exception/exception.dart';
+import 'package:on_chain_bridge/exception/exception.dart';
 
 enum AppPlatform {
   windows,

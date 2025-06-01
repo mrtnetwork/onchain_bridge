@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:onchain_bridge/web/api/chrome/chrome.dart';
-import 'package:onchain_bridge/web/storage/safe_storage/safestorage.dart';
-import 'package:onchain_bridge/web/storage/constant/constant.dart';
+import 'package:on_chain_bridge/web/api/chrome/chrome.dart';
+import 'package:on_chain_bridge/web/storage/safe_storage/safestorage.dart';
+import 'package:on_chain_bridge/web/storage/constant/constant.dart';
 
 class ChromeStorage extends SafeStorage {
   ChromeStorage._(super.chacha);

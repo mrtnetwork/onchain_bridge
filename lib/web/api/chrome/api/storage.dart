@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
-import 'package:onchain_bridge/web/api/chrome/models/models/storage.dart';
+import 'package:on_chain_bridge/web/api/chrome/models/models/storage.dart';
 import 'events.dart' show JSEvent;
 
 extension type Storage._(JSObject _) {

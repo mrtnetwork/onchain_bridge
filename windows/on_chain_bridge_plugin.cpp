@@ -1,4 +1,4 @@
-#include "onchain_bridge_plugin.h"
+#include "on_chain_bridge_plugin.h"
 
 // This must be included before many other Windows headers.
 #include <windows.h>
@@ -13,7 +13,7 @@
 #include <sstream>
 #include <Shlobj.h>
 
-namespace onchain_bridge
+namespace on_chain_bridge
 {
 	bool IsWindows11OrGreater()
 	{
@@ -47,7 +47,7 @@ namespace onchain_bridge
 	{
 		auto channel =
 			std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-				registrar->messenger(), "com.mrtnetwork.onchain_bridge.methodChannel",
+				registrar->messenger(), "com.mrtnetwork.on_chain_bridge.methodChannel",
 				&flutter::StandardMethodCodec::GetInstance());
 
 		auto plugin = std::make_unique<OnChainBridge>(registrar);
@@ -65,7 +65,7 @@ namespace onchain_bridge
 	{
 		channel_ =
 			std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(registrar->messenger(),
-																			  "com.mrtnetwork.onchain_bridge.methodChannel",
+																			  "com.mrtnetwork.on_chain_bridge.methodChannel",
 																			  &flutter::StandardMethodCodec::GetInstance());
 
 		window_proc_id = registrar->RegisterTopLevelWindowProcDelegate(
@@ -475,11 +475,16 @@ namespace onchain_bridge
 					}
 				}else if (methodType == "readKeys")
 				{
-					auto val = this->ReadKeys(key.value());
-					if (val.has_value())
-						result->Success(flutter::EncodableValue(val.value()));
+					auto key = this->GetStringArg("key", args);
+					if (key.has_value())
+					{
+						auto val = this->ReadKeys(key.value());
+						result->Success(flutter::EncodableValue(val));
+					}
 					else
-						result->Success();
+					{
+						result->Error("Exception occurred", "readKeys");
+					}
 				}
 				else if (methodType == "readAll")
 				{
@@ -1121,9 +1126,7 @@ namespace onchain_bridge
 		{
 			auto pcred = pcreds[i];
 			std::string target_name = CW2A(pcred->TargetName);
-			// auto val = std::string((char *)pcred->CredentialBlob);
 			auto key = this->RemoveKeyPrefix(target_name);
-			// If the key exists then data was already read from a file, which implies that the data read from the credential system is outdated
 			if (prefix.empty() || key.find(prefix) == 0)
 			{
 				keys.push_back(key);

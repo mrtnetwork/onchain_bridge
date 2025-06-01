@@ -1,6 +1,6 @@
 import 'dart:js_interop';
-import 'package:onchain_bridge/models/models.dart';
-import 'package:onchain_bridge/web/wallet/event.dart';
+import 'package:on_chain_bridge/models/models.dart';
+import 'package:on_chain_bridge/web/wallet/event.dart';
 
 import 'events.dart';
 import 'tabs.dart';

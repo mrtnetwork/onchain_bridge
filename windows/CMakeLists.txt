@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # Project-level configuration.
-set(PROJECT_NAME "onchain_bridge")
+set(PROJECT_NAME "on_chain_bridge")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
@@ -14,19 +14,19 @@ cmake_policy(VERSION 3.14...3.25)
 
 # This value is used when generating builds using this plugin, so it must
 # not be changed
-set(PLUGIN_NAME "onchain_bridge_plugin")
+set(PLUGIN_NAME "on_chain_bridge_plugin")
 
 # Any new source files that you add to the plugin should be added here.
 list(APPEND PLUGIN_SOURCES
-  "onchain_bridge_plugin.cpp"
-  "onchain_bridge_plugin.h"
+  "on_chain_bridge_plugin.cpp"
+  "on_chain_bridge_plugin.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment
 # on PLUGIN_NAME above).
 add_library(${PLUGIN_NAME} SHARED
-  "include/onchain_bridge/onchain_bridge_plugin_c_api.h"
-  "onchain_bridge_plugin_c_api.cpp"
+  "include/on_chain_bridge/on_chain_bridge_plugin_c_api.h"
+  "on_chain_bridge_plugin_c_api.cpp"
   ${PLUGIN_SOURCES}
 )
 
@@ -87,7 +87,7 @@ FetchContent_MakeAvailable(googletest)
 # The plugin's C API is not very useful for unit testing, so build the sources
 # directly into the test binary rather than using the DLL.
 add_executable(${TEST_RUNNER}
-  test/onchain_bridge_plugin_test.cpp
+  test/on_chain_bridge_plugin_test.cpp
   ${PLUGIN_SOURCES}
 )
 apply_standard_settings(${TEST_RUNNER})

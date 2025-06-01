@@ -1,6 +1,6 @@
 import 'dart:js_interop';
-import 'package:onchain_bridge/models/events/models/wallet_event.dart';
-import 'package:onchain_bridge/web/api/api.dart';
+import 'package:on_chain_bridge/models/events/models/wallet_event.dart';
+import 'package:on_chain_bridge/web/api/api.dart';
 
 @JS()
 extension type JSWalletEvent._(JSObject o) implements JSOBJ {
