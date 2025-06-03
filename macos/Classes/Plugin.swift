@@ -10,7 +10,7 @@ public protocol MethodHandler {
     func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult)
 }
 public class OnChainBridgePlugin: NSObject, FlutterPlugin,MethodHandler {
-    let serviceName = "com.mrtnetwork.on_chain_bridge"
+    let serviceName = "com.mrtnetwork.onChainWallet"
     public var registrar: FlutterPluginRegistrar!;
     public var channel: FlutterMethodChannel!
     private var barcodeScanner: BarcodeScanner!

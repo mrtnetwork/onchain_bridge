@@ -62,7 +62,7 @@ class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelega
         return FlutterStandardMessageCodec.sharedInstance()
     }
     
-    
+    var hasLoadedInitialURL = false
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         let data = WebViewData.toJson(
             id: self.id,
@@ -73,14 +73,33 @@ class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelega
         self.channel.invokeMethod(WebViewConst.webView, arguments: data.toJson())
         
     }
-    
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        hasLoadedInitialURL = false
+    }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         let errorMessage = (error as NSError).localizedDescription
-        let data = WebViewData.toJson(id: self.id, eventName: WebViewConst.onPageError, view: webView, message: errorMessage)
+        let isInitialLoad = !hasLoadedInitialURL
+
+            if isInitialLoad {
+                let html = """
+                <html>
+                <head><meta name='viewport' content='width=device-width, initial-scale=1.0'></head>
+                <body style='font-family: -apple-system; text-align: center; padding: 20px;'>
+                    <h2>Page Load Failed</h2>
+                    <p>\(errorMessage)</p>
+                </body>
+                </html>
+                """
+
+                webView.loadHTMLString(html, baseURL: nil)
+            }
+        let data = WebViewData.toJson(id: self.id, eventName: WebViewConst.onPageError, view: webView, message: errorMessage,
+                                      url: webView.url?.absoluteString)
         self.channel.invokeMethod(WebViewConst.webView, arguments: data.toJson())
     }
     
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        hasLoadedInitialURL = true
         webView.evaluateJavaScript(WebViewConst.faviIconScript) { result, error in
             if let result = result as? String {
                 let data = WebViewData.toJson(id: self.id, eventName: WebViewConst.onPageStart, view: webView, url: webView.url?.absoluteString, favicon: result)
@@ -91,6 +110,7 @@ class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelega
                 
             }
         }
+       
     }
     
     

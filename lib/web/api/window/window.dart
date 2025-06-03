@@ -283,15 +283,18 @@ extension type JSFile._(JSObject _) implements JSObject {
 
 @JS("Blob")
 extension type Blob._(JSObject _) implements JSObject {
-  external factory Blob(JSArray<JSArrayBuffer> blobParts, JSObject? options);
-  factory Blob.fromBytes(List<int> bytes) {
+  external factory Blob(JSArray<JSAny> blobParts, BlobOptions? options);
+  factory Blob.fromBytes(List<int> bytes, {BlobOptions? options}) {
     final data = Uint8List.fromList(bytes).buffer.toJS;
-    return Blob([data].toJS, null);
+    return Blob([data].toJS, options);
   }
-  external JSArrayBuffer? get blobParts;
+  external JSAny? get blobParts;
   external JSObject? get options;
 }
 
+extension type BlobOptions._(JSObject _) implements JSAny {
+  external factory BlobOptions({String? type});
+}
 @JS("Response")
 extension type Response._(JSObject _) implements JSObject {
   external factory Response();
