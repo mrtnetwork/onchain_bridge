@@ -168,7 +168,12 @@ class IndexDbStorage extends SafeStorage {
     final store = getStore(database, mode: IndexDbStorageMode.readonly).$1;
     final request = store.getAllKeysStr();
     final response = await _requestHandler(request);
-    return response.toDart.map((e) => e.toDart).toList();
+    final keys = response.toDart.map((e) => e.toDart).toList();
+    keys.remove(StorageConst.key);
+    if (prefix == null || prefix.isEmpty) {
+      return keys;
+    }
+    return keys.where((e) => e.startsWith(prefix)).toList();
   }
 
   @override

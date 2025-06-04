@@ -61,8 +61,9 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   }
 
   @override
-  Future<List<String>> readKeys({String? prefix}) {
-    return storage.readKeys(prefix: prefix);
+  Future<List<String>> readKeys({String? prefix}) async {
+    final keys = await storage.readKeys(prefix: prefix);
+    return keys;
   }
 
   @override
