@@ -25,7 +25,8 @@ extension type JSWalletEvent._(JSObject o) implements JSOBJ {
   external JSArray<JSNumber>? get data;
   external String? get additional;
   external set additional(String? additional);
-  List<int> get data_ => List<int>.from(data!.toDart);
+  List<int> get data_ =>
+      List<int>.from(data!.toDart.map((e) => e.toDartInt).toList());
   Map<String, dynamic> toJson() {
     return {
       "id": clientId,
