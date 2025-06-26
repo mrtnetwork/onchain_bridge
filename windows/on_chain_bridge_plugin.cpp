@@ -5,7 +5,7 @@
 
 // For getPlatformVersion; remove unless needed for your plugin implementation.
 #include <VersionHelpers.h>
-
+#include "network_monitor.h"
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
@@ -73,6 +73,24 @@ namespace on_chain_bridge
 			{
 				return HandleWindowProc(hWnd, message, wParam, lParam);
 			});
+		auto event_channel = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+				registrar->messenger(), "your_plugin/network_status",
+				&flutter::StandardMethodCodec::GetInstance());
+				auto handler = std::make_unique<flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
+					[]([[maybe_unused]] const flutter::EncodableValue* arguments,
+					   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events)
+						-> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
+					  monitor = std::make_unique<NetworkMonitor>(registrar);
+					  monitor->StartMonitoring(std::move(events));
+					  return nullptr;
+					},
+					[](const flutter::EncodableValue* arguments)
+						-> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
+					  monitor->StopMonitoring();
+					  return nullptr;
+					});
+			  
+				event_channel->SetStreamHandler(std::move(handler));
 	}
 
 	OnChainBridge::~OnChainBridge() {}

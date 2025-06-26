@@ -7,10 +7,12 @@ class PlatformConfig {
   final int storageVersion;
   final bool platformSupported;
   final bool supportWebView;
+  final bool isExtension;
   const PlatformConfig(
       {required this.platform,
       required this.hasBarcodeScanner,
       required this.platformSupported,
       required this.supportWebView,
+      required this.isExtension,
       this.storageVersion = _storageVersion});
 }

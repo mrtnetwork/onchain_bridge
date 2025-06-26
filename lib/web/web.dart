@@ -3,11 +3,12 @@ library;
 export 'api/api.dart';
 export 'wallet/event.dart';
 export 'storage/storage.dart';
+import 'dart:async';
 import 'dart:js_interop';
 import 'package:on_chain_bridge/exception/exception.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_bridge/on_chain_bridge.dart';
-import 'package:on_chain_bridge/web/api/window/window.dart';
+import 'package:on_chain_bridge/web/api/api.dart';
 import 'package:on_chain_bridge/web/storage/safe_storage/safestorage.dart';
 import 'package:on_chain_bridge/web/storage/storage/index_db_storage.dart';
 
@@ -17,6 +18,7 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   WebPlatformInterface._();
   IndexDbStorage? _storage;
   IndexDbStorage get storage => _storage!;
+
   Future<void> _initDatabase() async {
     _storage?.close();
     _storage = null;
@@ -27,17 +29,9 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   }
 
   @override
-  void addNetworkListener(NetworkStatusListener listener) {}
-
-  @override
   Future<bool> containsKeySecure(String key) async {
     final data = await storage.read(key);
     return data != null;
-  }
-
-  @override
-  Future<NetworkEvent> deviceConnectionStatus() {
-    throw OnChainBridgeException.unsuported;
   }
 
   @override
@@ -82,9 +76,6 @@ class WebPlatformInterface extends OnChainBridgeInterface {
     await storage.removes(keys);
     return true;
   }
-
-  @override
-  void removeNetworkListener(NetworkStatusListener listener) {}
 
   @override
   Future<bool> removeSecure(String key) async {
@@ -172,7 +163,8 @@ class WebPlatformInterface extends OnChainBridgeInterface {
         platform: platform,
         hasBarcodeScanner: barcode,
         platformSupported: _storage != null,
-        supportWebView: false);
+        supportWebView: false,
+        isExtension: isExtension);
   }
 
   @override
@@ -190,5 +182,29 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   Future<bool> writeClipboard(String text) async {
     return await jsWindow.navigatorNullable?.clipboard?.writeText_(text) ??
         false;
+  }
+
+  StreamSubscription<dynamic>? _onOnline;
+  StreamSubscription<dynamic>? _onOffline;
+  late final StreamController<bool> _onNetworkChange =
+      StreamController.broadcast(
+          sync: true,
+          onCancel: () {
+            _onOnline?.cancel();
+            _onOnline = null;
+            _onOffline?.cancel();
+            _onOffline = null;
+          },
+          onListen: () => _onNetworkChange.add(jsWindow.navigator.onLine));
+  @override
+  Stream<bool> get onNetworkStatus {
+    _onOnline ??= jsWindow.stream('online').listen((e) {
+      if (_onNetworkChange.hasListener) _onNetworkChange.add(true);
+    });
+    _onOffline ??= jsWindow.stream('offline').listen((e) {
+      if (_onNetworkChange.hasListener) _onNetworkChange.add(false);
+    });
+
+    return _onNetworkChange.stream;
   }
 }

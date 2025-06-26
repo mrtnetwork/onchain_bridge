@@ -6,7 +6,6 @@ import android.content.Intent
 import com.google.zxing.client.android.Intents
 import com.journeyapps.barcodescanner.ScanOptions
 import com.mrtnetwork.on_chain_bridge.barcode.CaptureActivityPortrait
-import com.mrtnetwork.on_chain_bridge.connection.NetworkEvent
 import com.mrtnetwork.on_chain_bridge.encryptions.EncryptionImpl
 import com.mrtnetwork.on_chain_bridge.share.ShareImpl
 import com.mrtnetwork.on_chain_bridge.webview.WebViewInterface
@@ -27,7 +26,6 @@ abstract class PluginService : ActivityAware, EncryptionImpl, ShareImpl, WebView
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         mainActivity = binding.activity
         binding.addOnNewIntentListener(this)
-        OnChainCore.liveData.observeForever { handleObs(it) }
         binding.addActivityResultListener(this)
 
 
@@ -79,14 +77,6 @@ abstract class PluginService : ActivityAware, EncryptionImpl, ShareImpl, WebView
     override fun onDetachedFromService() {
     }
 
-    private fun handleObs(update: Any) {
-        when (update::class) {
-            NetworkEvent::class -> {
-                update as NetworkEvent
-                methodChannel.invokeMethod(update.toString(), update.toJson())
-            }
-        }
-    }
 
 
     private fun barcodeScan(result: MethodChannel.Result) {

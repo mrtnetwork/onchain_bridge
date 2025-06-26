@@ -6,29 +6,45 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
-import com.mrtnetwork.on_chain_bridge.connection.ConnectionBroadcast
-import com.mrtnetwork.on_chain_bridge.connection.NetworkEvent
 import com.mrtnetwork.on_chain_bridge.encryptions.EncryptionImpl
 import com.mrtnetwork.on_chain_bridge.webview.WebViewFactory
+import com.mrtnetwork.on_chain_bridge.types.AppNativeEvent
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.util.PathUtils
+import android.content.BroadcastReceiver
+import io.flutter.plugin.common.EventChannel
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
+import android.content.IntentFilter
+import android.util.Log
 
-
-class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler, PluginService() {
+class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChannel.StreamHandler, PluginService() {
     override lateinit var methodChannel: MethodChannel
     override lateinit var applicationContext: Context
     override var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding? = null
-
+    private var eventSink: EventChannel.EventSink? = null
+    private var connectivityReceiver: BroadcastReceiver? = null
 
     override fun onNewIntent(intent: Intent): Boolean {
+        handleIntent(intent)
         return false;
     }
 
+    private fun handleIntent(intent: Intent) {
+        Log.d("DeepLink", "Received intent: ${intent}")
+        Log.d("DeepLink", "Action: ${intent.action}")
+        Log.d("DeepLink", "Data: ${intent.data}")
+        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
+            val uri = intent.data.toString()
+            val event = AppNativeEvent(AppNativeEvent.EventType.DEEPLINK, uri)
+            eventSink?.success(event.toJson())
+        }
+    }
+
     override var mainActivity: Activity? = null
-    private val connectionManager: ConnectionBroadcast = ConnectionBroadcast()
 
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -40,15 +56,55 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler, PluginServ
         )
         this.methodChannel.setMethodCallHandler(this)
         EncryptionImpl.init(applicationContext)
-        connectionManager.listenOnNetwork(applicationContext)
         this.flutterPluginBinding = flutterPluginBinding
+        val eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "com.mrtnetwork.on_chain_bridge.methodChannel/network_status")
+        eventChannel.setStreamHandler(this)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         methodChannel.setMethodCallHandler(null)
-        connectionManager.cancelListen(applicationContext)
+        unregisterReceiver()
 
     }
+    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+        eventSink = events
+        registerReceiver()
+        // Send initial status
+        sendNetworkStatus()
+    }
+
+    override fun onCancel(arguments: Any?) {
+        unregisterReceiver()
+        eventSink = null
+    }
+
+    private fun registerReceiver() {
+        if (connectivityReceiver == null) {
+            connectivityReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    sendNetworkStatus()
+                }
+            }
+            val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+            applicationContext.registerReceiver(connectivityReceiver, filter)
+        }
+    }
+
+    private fun unregisterReceiver() {
+        if (connectivityReceiver != null) {
+            applicationContext.unregisterReceiver(connectivityReceiver)
+            connectivityReceiver = null
+        }
+    }
+
+    private fun sendNetworkStatus() {
+        val cm = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork: NetworkInfo? = cm.activeNetworkInfo
+        val isConnected = activeNetwork?.isConnectedOrConnecting == true
+        val event = AppNativeEvent(AppNativeEvent.EventType.INTERNET, true)
+        eventSink?.success(event.toJson())
+    }
+
 
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -74,11 +130,6 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler, PluginServ
                 val args: Map<String, Any?> = OnChainCore.getMapArguments(call, result) ?: return
                 result.success(lunchUrl(args["uri"] as String?))
             }
-            "network" -> {
-                val event: NetworkEvent = connectionManager.connectivity.networkType
-                result.success(event.toJson())
-            }
-
             else -> super.onMethodCall(call, result)
 
         }

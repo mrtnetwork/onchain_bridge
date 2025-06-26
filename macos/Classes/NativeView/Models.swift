@@ -23,7 +23,7 @@ struct WebViewData {
     let url: String?
     let favicon: String?
     let originalUrl: String?
-    let title: String?
+    let title: String?	
     let message: String?
     let progress: Int?
     let request: WebViewRequest?

@@ -1,9 +1,9 @@
 import Cocoa
 import FlutterMacOS
-import WebKit
+@preconcurrency import WebKit
 
 
-class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelegate {
+class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelegate,@preconcurrency WKUIDelegate {
     private var webView: WKWebView!
     public let id:String
     private var channel: FlutterMethodChannel
@@ -11,7 +11,8 @@ class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelega
     //    private var view: WebViewWrapper!
     private var viewWidth: CGFloat = 0
     private var viewHeight: CGFloat = 0
-
+    
+    	
     
     
     init(channel: FlutterMethodChannel,id:String,url:String?,jsInterface: String?) {
@@ -21,6 +22,7 @@ class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelega
         super.init()
         
         webView = WKWebView(frame: .zero,configuration:self.webConfiguration)
+        webView.uiDelegate = self
         self.webConfiguration.preferences = WKPreferences()
         self.webConfiguration.preferences.javaScriptEnabled = true
         self.webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
@@ -76,6 +78,8 @@ class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelega
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         hasLoadedInitialURL = false
     }
+    
+    
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         let errorMessage = (error as NSError).localizedDescription
         let isInitialLoad = !hasLoadedInitialURL
@@ -112,8 +116,39 @@ class NativeViewFactory: NSObject, FlutterPlatformViewFactory,WKNavigationDelega
         }
        
     }
+    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+           let alert = NSAlert()
+           alert.messageText = message
+           alert.addButton(withTitle: "OK")
+           alert.runModal()
+           completionHandler()
+       }
     
-    
+    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
+        let result = alert.runModal() == .alertFirstButtonReturn
+        completionHandler(result)
+    }
+    func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
+        let alert = NSAlert()
+        alert.messageText = prompt
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
+
+        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
+        input.stringValue = defaultText ?? ""
+        alert.accessoryView = input
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            completionHandler(input.stringValue)
+        } else {
+            completionHandler(nil)
+        }
+    }
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "estimatedProgress" {
             let progress = webView.estimatedProgress

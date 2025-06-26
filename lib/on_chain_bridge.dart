@@ -45,10 +45,6 @@ abstract class OnChainBridgeInterface extends PlatformInterface {
   Future<AppPath> path();
   Future<DeviceInfo> getDeviceInfo();
   Future<bool> launchUri(String uri);
-  Future<NetworkEvent> deviceConnectionStatus();
-  void addNetworkListener(NetworkStatusListener listener);
-  void removeNetworkListener(NetworkStatusListener listener);
-
   Future<Stream<BarcodeScannerResult>> startBarcodeScanner(
       {required BarcodeScannerParams param});
   Future<void> stopBarcodeScanner();
@@ -56,6 +52,7 @@ abstract class OnChainBridgeInterface extends PlatformInterface {
   Future<PlatformConfig> getConfig();
   Future<String?> readClipboard();
   Future<bool> writeClipboard(String text);
+  Stream<bool> get onNetworkStatus;
 }
 
 abstract class PlatformWebView {

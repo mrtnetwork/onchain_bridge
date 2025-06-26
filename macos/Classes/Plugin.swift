@@ -5,20 +5,50 @@ import AppKit
 import Cocoa
 import AVFoundation
 import CoreImage
+import SystemConfiguration
 
 public protocol MethodHandler {
     func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult)
 }
-public class OnChainBridgePlugin: NSObject, FlutterPlugin,MethodHandler {
+public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,MethodHandler {
+    private var eventSink: FlutterEventSink?
+    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+        eventSink = events
+        networkMonitor = NetworkMonitor(eventSink: events)
+        return nil
+    }
+    
+    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        networkMonitor?.dispose()
+        networkMonitor = nil
+        eventSink = nil
+        
+        return nil
+    }
+
+    
+    public func application(_ application: NSApplication, open urls: [URL]) {
+        	
+          for url in urls {
+              print("🔗 macOS received deep link: \(url)")
+              let event = AppNativeEvent(type: .deeplink, value: url.absoluteString)
+              eventSink?(event.toJson())
+          }
+      }
+    
     let serviceName = "com.mrtnetwork.onChainWallet"
     public var registrar: FlutterPluginRegistrar!;
     public var channel: FlutterMethodChannel!
     private var barcodeScanner: BarcodeScanner!
+    private var networkMonitor: NetworkMonitor?
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "com.mrtnetwork.on_chain_bridge.methodChannel", binaryMessenger: registrar.messenger)
         let instance = OnChainBridgePlugin(registrar, channel)
+        let eventChannel = FlutterEventChannel(name: "com.mrtnetwork.on_chain_bridge.methodChannel/network_status",
+                                                   binaryMessenger: registrar.messenger)
         registrar.addMethodCallDelegate(instance, channel: channel)
+        eventChannel.setStreamHandler(instance)
         
     }
     

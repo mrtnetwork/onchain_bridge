@@ -12,6 +12,9 @@ class IoPlatformInterface extends OnChainBridgeInterface {
 
   StreamController<BarcodeScannerResult>? _barcodeListener;
 
+  static const EventChannel _networkChannel = EventChannel(
+      'com.mrtnetwork.on_chain_bridge.methodChannel/network_status');
+
   static MethodChannel get _channel => _methodChannel;
   IoPlatformInterface() {
     if (Platform.isWindows || Platform.isMacOS) {
@@ -44,7 +47,6 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   }
 
   late final DesktopPlatformInterface _desktop;
-  static final Set<NetworkStatusListener> _networkEventListener = {};
 
   @override
   Future<bool> secureFlag({required bool isSecure}) async {
@@ -136,22 +138,6 @@ class IoPlatformInterface extends OnChainBridgeInterface {
     return DeviceInfo.fromJson(Map<String, dynamic>.from(data));
   }
 
-  @override
-  Future<NetworkEvent> deviceConnectionStatus() async {
-    final data = await _channel.invokeMethod(NativeMethodsConst.network, {});
-    return NetworkEvent.fromJson(Map<String, dynamic>.from(data));
-  }
-
-  @override
-  void addNetworkListener(NetworkStatusListener listener) {
-    _networkEventListener.add(listener);
-  }
-
-  @override
-  void removeNetworkListener(NetworkStatusListener listener) {
-    _networkEventListener.remove(listener);
-  }
-
   /// ios
   @override
   Future<Map<String, String>> readMultipleSecure(List<String> keys) async {
@@ -240,7 +226,8 @@ class IoPlatformInterface extends OnChainBridgeInterface {
         platform: platform,
         hasBarcodeScanner: barcode,
         platformSupported: true,
-        supportWebView: Platform.isAndroid || Platform.isMacOS);
+        supportWebView: Platform.isAndroid || Platform.isMacOS,
+        isExtension: false);
   }
 
   @override
@@ -277,4 +264,12 @@ class IoPlatformInterface extends OnChainBridgeInterface {
       return false;
     }
   }
+
+  @override
+  Stream<bool> get onNetworkStatus => _networkChannel
+      .receiveBroadcastStream()
+      .map((event) => AppNativeEvent.fromJson(Map<String, dynamic>.from(event)))
+      .where((e) => e.type == AppNativeEventType.internet)
+      .cast<AppNativeEventConnection>()
+      .map((e) => e.isOnline);
 }

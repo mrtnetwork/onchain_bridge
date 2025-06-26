@@ -12,8 +12,6 @@ external T _cloneInto<T extends JSAny>(T? object, JSAny? where);
 
 @JS("cloneInto")
 external JSFunction? get cloneInto;
-// @JS("browser")
-// external JSAny? get _browser;
 
 @JS("console")
 external JSConsole get jsConsole;
@@ -59,6 +57,9 @@ extension type Window._(JSObject _) implements WebEventStream {
     final result = await future.toDart;
     return result;
   }
+
+  external set ononline(JSFunction _);
+  external set onoffline(JSFunction _);
 }
 
 @JS()
@@ -148,7 +149,7 @@ extension type JSNavigator._(JSObject _) implements JSObject {
   external factory JSNavigator();
   external MediaDevices get mediaDevices;
   external String? get userAgent;
-  // bool get isFirefox => userAgent?.contains("Firefox") ?? false;
+  external bool get onLine;
   bool get isWebKit => userAgent?.contains("AppleWebKit") ?? false;
   bool get isFirefoxMobile {
     final ua = userAgent?.toLowerCase();
@@ -378,9 +379,10 @@ extension type EventInit._(JSObject _) implements JSObject {
   }
 }
 @JS("Event")
-extension type MessageEvent._(JSObject _) implements WebEvent {
+extension type MessageEvent<T extends JSAny?>._(JSObject _)
+    implements WebEvent {
   external factory MessageEvent();
-  external JSAny? get data;
+  external T get data;
 }
 extension type WebEventStream._(JSObject _) {
   @JS("addEventListener")
@@ -392,8 +394,8 @@ extension type WebEventStream._(JSObject _) {
 
   Stream<T> stream<T>(String type) {
     final StreamController<T> controller = StreamController();
-    final callback = (MessageEvent event) {
-      controller.add(event.data?.dartify() as T);
+    final callback = (MessageEvent<JSAny?> event) {
+      controller.add(event.data.dartify() as T);
     }.toJS;
     controller.onCancel = () {
       removeEventListener(type, callback);
@@ -458,7 +460,7 @@ extension type JSON._(JSObject _) implements JSObject {
   @JS("parse")
   external JSObject? parse(String? text);
   @JS("stringify")
-  external String stringify(JSAny? object);
+  external String stringify(JSAny? object, [JSFunction? encodable]);
 }
 @JS("console")
 extension type JSConsole._(JSObject _) implements JSObject {
