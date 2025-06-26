@@ -72,7 +72,8 @@
         "__bit_reference": "cpp",
         "__hash_table": "cpp",
         "__tree": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "mutex": "cpp"
     },
     "git.confirmSync": false,
     "git.enableStatusBarSync": false,

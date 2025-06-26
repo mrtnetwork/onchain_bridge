@@ -5,7 +5,6 @@
 
 // For getPlatformVersion; remove unless needed for your plugin implementation.
 #include <VersionHelpers.h>
-#include "network_monitor.h"
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
@@ -15,6 +14,92 @@
 
 namespace on_chain_bridge
 {
+
+	class NetworkEvents : public INetworkListManagerEvents
+	{
+	public:
+		NetworkEvents(std::function<void(bool)> callback) : callback_(callback), ref_count_(1) {}
+
+		STDMETHODIMP QueryInterface(REFIID riid, void **ppv)
+		{
+			if (riid == IID_IUnknown || riid == IID_INetworkListManagerEvents)
+			{
+				*ppv = static_cast<INetworkListManagerEvents *>(this);
+				AddRef();
+				return S_OK;
+			}
+			*ppv = nullptr;
+			return E_NOINTERFACE;
+		}
+
+		STDMETHODIMP_(ULONG)
+		AddRef()
+		{
+			return ++ref_count_;
+		}
+
+		STDMETHODIMP_(ULONG)
+		Release()
+		{
+			ULONG res = --ref_count_;
+			if (res == 0)
+			{
+				delete this;
+			}
+			return res;
+		}
+
+		STDMETHODIMP ConnectivityChanged(NLM_CONNECTIVITY newConnectivity)
+		{
+			bool connected = (newConnectivity & (NLM_CONNECTIVITY_IPV4_INTERNET | NLM_CONNECTIVITY_IPV6_INTERNET)) != 0;
+			callback_(connected);
+			return S_OK;
+		}
+
+	private:
+		std::function<void(bool)> callback_;
+		std::atomic<ULONG> ref_count_;
+	};
+	class NetworkStreamHandler : public flutter::StreamHandler<flutter::EncodableValue>
+	{
+	public:
+		explicit NetworkStreamHandler(OnChainBridge *plugin) : plugin_(plugin) {}
+
+	protected:
+		std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnListenInternal(
+			const flutter::EncodableValue *arguments,
+			std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> &&events) override
+		{
+
+			{
+				std::lock_guard<std::mutex> lock(plugin_->sink_mutex_);
+				plugin_->event_sink_ = std::move(events);
+			}
+
+			bool connected = plugin_->IsInternetConnected();
+			if (plugin_->event_sink_)
+			{
+				flutter::EncodableMap event_data = {
+					{flutter::EncodableValue("type"), flutter::EncodableValue("internet")},
+					{flutter::EncodableValue("value"), flutter::EncodableValue(connected)}};
+				plugin_->event_sink_->Success(flutter::EncodableValue(event_data));
+			}
+
+			return nullptr;
+		}
+
+		std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnCancelInternal(
+			const flutter::EncodableValue *arguments) override
+		{
+
+			std::lock_guard<std::mutex> lock(plugin_->sink_mutex_);
+			plugin_->event_sink_.reset();
+			return nullptr;
+		}
+
+	private:
+		OnChainBridge *plugin_;
+	};
 	bool IsWindows11OrGreater()
 	{
 		DWORD dwVersion = 0;
@@ -45,18 +130,8 @@ namespace on_chain_bridge
 	void OnChainBridge::RegisterWithRegistrar(
 		flutter::PluginRegistrarWindows *registrar)
 	{
-		auto channel =
-			std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-				registrar->messenger(), "com.mrtnetwork.on_chain_bridge.methodChannel",
-				&flutter::StandardMethodCodec::GetInstance());
 
 		auto plugin = std::make_unique<OnChainBridge>(registrar);
-
-		channel->SetMethodCallHandler(
-			[plugin_pointer = plugin.get()](const auto &call, auto result)
-			{
-				plugin_pointer->HandleMethodCall(call, std::move(result));
-			});
 
 		registrar->AddPlugin(std::move(plugin));
 	}
@@ -67,30 +142,44 @@ namespace on_chain_bridge
 			std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(registrar->messenger(),
 																			  "com.mrtnetwork.on_chain_bridge.methodChannel",
 																			  &flutter::StandardMethodCodec::GetInstance());
+		channel_->SetMethodCallHandler(
+			[this](const auto &call, auto result)
+			{
+				HandleMethodCall(call, std::move(result));
+			});
 
 		window_proc_id = registrar->RegisterTopLevelWindowProcDelegate(
 			[this](HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				return HandleWindowProc(hWnd, message, wParam, lParam);
 			});
-		auto event_channel = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-				registrar->messenger(), "your_plugin/network_status",
-				&flutter::StandardMethodCodec::GetInstance());
-				auto handler = std::make_unique<flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
-					[]([[maybe_unused]] const flutter::EncodableValue* arguments,
-					   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events)
-						-> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
-					  monitor = std::make_unique<NetworkMonitor>(registrar);
-					  monitor->StartMonitoring(std::move(events));
-					  return nullptr;
-					},
-					[](const flutter::EncodableValue* arguments)
-						-> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
-					  monitor->StopMonitoring();
-					  return nullptr;
-					});
-			  
-				event_channel->SetStreamHandler(std::move(handler));
+		stream_handler_ = std::make_unique<NetworkStreamHandler>(this);
+		event_channel_ = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+			registrar->messenger(),
+			"com.mrtnetwork.on_chain_bridge.methodChannel/network_status",
+			&flutter::StandardMethodCodec::GetInstance());
+
+		event_channel_->SetStreamHandler(std::move(stream_handler_));
+		if (SUCCEEDED(CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&network_manager_))))
+		{
+			CComPtr<IConnectionPointContainer> container;
+			if (SUCCEEDED(network_manager_->QueryInterface(IID_PPV_ARGS(&container))))
+			{
+				if (SUCCEEDED(container->FindConnectionPoint(IID_INetworkListManagerEvents, &connection_point_)))
+				{
+					events_handler_ = new NetworkEvents([this](bool connected)
+														{
+                    std::lock_guard<std::mutex> lock(sink_mutex_);
+                    if (event_sink_) {
+						flutter::EncodableMap event_data = {
+							{flutter::EncodableValue("type"), flutter::EncodableValue("internet")},
+							{flutter::EncodableValue("value"), flutter::EncodableValue(connected)}};
+						event_sink_->Success(flutter::EncodableValue(event_data));
+                    } });
+					connection_point_->Advise(events_handler_, &cookie_);
+				}
+			}
+		}
 	}
 
 	OnChainBridge::~OnChainBridge() {}
@@ -491,7 +580,8 @@ namespace on_chain_bridge
 					{
 						result->Error("Exception occurred", "read");
 					}
-				}else if (methodType == "readKeys")
+				}
+				else if (methodType == "readKeys")
 				{
 					auto key = this->GetStringArg("key", args);
 					if (key.has_value())
@@ -1097,7 +1187,7 @@ namespace on_chain_bridge
 		return creds;
 	}
 
-	flutter::EncodableList OnChainBridge::ReadKeys(const std::string& prefix)
+	flutter::EncodableList OnChainBridge::ReadKeys(const std::string &prefix)
 	{
 		WIN32_FIND_DATA searchRes;
 		HANDLE hFile;
@@ -1376,9 +1466,9 @@ namespace on_chain_bridge
 	{
 	}
 	std::optional<LRESULT> OnChainBridge::HandleWindowProc(HWND hWnd,
-															  UINT message,
-															  WPARAM wParam,
-															  LPARAM lParam)
+														   UINT message,
+														   WPARAM wParam,
+														   LPARAM lParam)
 	{
 		std::optional<LRESULT> result = std::nullopt;
 		if (message == WM_DPICHANGED)
@@ -2023,5 +2113,13 @@ namespace on_chain_bridge
 			PostMessage(mainWindow, WM_SYSCOMMAND, SC_MINIMIZE, 0);
 		}
 	}
-
+	bool OnChainBridge::IsInternetConnected()
+	{
+		VARIANT_BOOL isConnected = VARIANT_FALSE;
+		if (network_manager_)
+		{
+			network_manager_->get_IsConnectedToInternet(&isConnected);
+		}
+		return isConnected == VARIANT_TRUE;
+	}
 }
