@@ -28,6 +28,9 @@ extension type Tabs._(JSObject _) {
           void Function(int tabId, ChangeInfo changeInfo, ChromeTab tab)>
       get onUpdated;
 
+  external JSEvent<void Function(int tabId, RemoveTabInfo activeInfo)>
+      get onRemoved;
+
   Future<ChromeTab> get_(int tabId) async {
     final future = get(tabId).toDart;
     final result = await future;
@@ -198,6 +201,11 @@ extension type QueryInfo._(JSObject o) implements JSObject {
 extension type ActiveInfo._(JSObject o) implements JSObject {
   external factory ActiveInfo();
   external int get tabId;
+  external int get windowId;
+}
+extension type RemoveTabInfo._(JSObject o) implements JSObject {
+  external factory RemoveTabInfo();
+  external bool get isWindowClosing;
   external int get windowId;
 }
 extension type ChangeInfo._(JSObject o) implements JSObject {

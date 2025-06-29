@@ -12,7 +12,9 @@ dependencies:
     sdk: flutter
   plugin_platform_interface: ^2.1.8
   blockchain_utils: ^5.1.0
-
+  # blockchain_utils:
+  #   path: ../blockchain_utils
+    
 dev_dependencies:
   flutter_test:
     sdk: flutter
