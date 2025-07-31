@@ -4,9 +4,7 @@ import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:blockchain_utils/utils/string/string.dart';
 
 import 'package:on_chain_bridge/web/api/api.dart';
-import 'package:on_chain_bridge/web/api/window/indexed_db.dart';
 import 'package:on_chain_bridge/web/storage/storage/chrome_storage.dart';
-import 'package:on_chain_bridge/web/storage/storage/index_db_storage.dart';
 import 'package:on_chain_bridge/web/storage/storage/web_storage.dart';
 import 'package:on_chain_bridge/web/storage/constant/constant.dart';
 
@@ -52,17 +50,11 @@ class SafestorageUtils {
 abstract class SafeStorage {
   final ChaCha20Poly1305 _chacha;
   const SafeStorage(this._chacha);
-  static Future<SafeStorage> getOldDb() async {
+  static Future<SafeStorage> init() async {
     if (isExtension) {
       return ChromeStorage.init();
     }
     return WebStorage.init();
-  }
-
-  static Future<IndexDbStorage?> init() async {
-    if (indexedDB == null) return null;
-    final key = await IndexDbStorage.init();
-    return key.$1;
   }
 
   Future<void> clear();

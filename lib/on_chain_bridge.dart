@@ -4,6 +4,7 @@
 // 2. [window_manager](https://pub.dev/packages/window_manager) - Additionally, some methods are inspired by the window_manager plugin, which is licensed under the MIT license. The original project can be found at: https://github.com/leanflutter/window_manager
 
 import 'dart:async';
+import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -25,22 +26,23 @@ abstract class OnChainBridgeInterface extends PlatformInterface {
 
   Future<bool> secureFlag({required bool isSecure});
 
-  Future<String?> readSecure(String key);
-  Future<List<String>> readKeys({String? prefix});
-  Future<bool> writeSecure(String key, String value);
-  Future<bool> containsKeySecure(String key);
-  Future<Map<String, String>> readAllSecure({String? prefix});
-  Future<Map<String, String>> readMultipleSecure(List<String> keys);
-  Future<Map<String, String>> readMultipleSecureWithPrefix(
-      {String? prefix}) async {
-    if (prefix == null || prefix.isEmpty) return readAllSecure();
-    final keys = await readKeys(prefix: prefix);
-    return readMultipleSecure(keys);
-  }
+  // Future<String?> readSecure(String key);
+  // Future<List<String>> readKeys({String? prefix});
+  // Future<bool> writeSecure(String key, String value);
+  // Future<bool> containsKeySecure(String key);
+  // Future<Map<String, String>> readAllSecure({String? prefix});
+  // Future<Map<String, String>> readMultipleSecure(List<String> keys);
+  // Future<Map<String, String>> readMultipleSecureWithPrefix(
+  //     {String? prefix}) async {
+  //   if (prefix == null || prefix.isEmpty) return readAllSecure();
+  //   final keys = await readKeys(prefix: prefix);
+  //   return readMultipleSecure(keys);
+  // }
 
-  Future<bool> removeMultipleSecure(List<String> keys);
-  Future<bool> removeAllSecure({String? prefix});
-  Future<bool> removeSecure(String key);
+  // Future<bool> removeMultipleSecure(List<String> keys);
+  // Future<bool> removeAllSecure({String? prefix});
+  // Future<bool> removeSecure(String key);
+
   Future<bool> share(Share share);
   Future<AppPath> path();
   Future<DeviceInfo> getDeviceInfo();
@@ -49,10 +51,19 @@ abstract class OnChainBridgeInterface extends PlatformInterface {
       {required BarcodeScannerParams param});
   Future<void> stopBarcodeScanner();
   Future<bool> hasBarcodeScanner();
-  Future<PlatformConfig> getConfig();
+  Future<PlatformConfig> init();
   Future<String?> readClipboard();
   Future<bool> writeClipboard(String text);
   Stream<bool> get onNetworkStatus;
+
+  Future<DATA?> readDb<DATA extends ITableData>(ITableRead<DATA> params);
+  Future<bool> removeDb(ITableRemove params);
+  Future<bool> writeDb(ITableInsertOrUpdate params);
+  Future<List<DATA>> readAllDb<DATA extends ITableData>(
+      ITableRead<DATA> params);
+  Future<bool> writeAllDb(List<ITableInsertOrUpdate> params);
+  Future<bool> removeAllDb(List<ITableRemove> params);
+  Future<bool> dropDb(ITableDrop params);
 }
 
 abstract class PlatformWebView {

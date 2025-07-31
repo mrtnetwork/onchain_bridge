@@ -10,4 +10,5 @@ class NativeMethodsConst {
       'com.mrtnetwork.on_chain_bridge.methodChannel';
   // windows
   static const String windowsManager = "windowsManager";
+  static const String appDbName = "db_onchain";
 }

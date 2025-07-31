@@ -22,7 +22,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> hide() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "hide"});
     return data;
   }
@@ -82,7 +82,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> show() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "show"});
     return data;
   }
@@ -104,14 +104,14 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
       'height': bounds?.height ?? size?.height,
       'animate': animate,
     }..removeWhere((key, value) => value == null);
-    await IoPlatformInterface._channel
+    await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, arguments);
   }
 
   /// ios
   @override
   Future<bool> init() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "init"});
     return data;
   }
@@ -119,7 +119,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> isFullScreen() async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "isFullScreen"});
     return data;
   }
@@ -127,7 +127,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> isMaximized() async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "isMaximized"});
     return data;
   }
@@ -135,7 +135,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> isMinimized() async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "isMinimized"});
     return data;
   }
@@ -143,7 +143,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> isVisible() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "isVisible"});
     return data;
   }
@@ -151,7 +151,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> minimize() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "minimize"});
     return data;
   }
@@ -159,7 +159,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> restore() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "restore"});
     return data;
   }
@@ -167,7 +167,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> setFullScreen(bool isFullScreen) async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager,
         {"type": "restore", "isFullScreen": isFullScreen});
     return data;
@@ -176,7 +176,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> unmaximize() async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "unmaximize"});
     return data;
   }
@@ -184,7 +184,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<void> waitUntilReadyToShow() async {
-    await IoPlatformInterface._channel.invokeMethod(
+    await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "waitUntilReadyToShow"});
     if (await isFullScreen()) await setFullScreen(false);
     if (await isMaximized()) await unmaximize();
@@ -194,7 +194,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> blur() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "blur"});
     return data;
   }
@@ -202,7 +202,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> close() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "close"});
     return data;
   }
@@ -210,7 +210,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> focus() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "focus"});
     return data;
   }
@@ -223,7 +223,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
       'type': 'getBounds'
     };
     final Map<dynamic, dynamic> resultData =
-        await IoPlatformInterface._channel.invokeMethod(
+        await IoPlatformInterface.channel.invokeMethod(
       NativeMethodsConst.windowsManager,
       arguments,
     );
@@ -238,7 +238,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> isFocused() async {
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, {"type": "isFocused"});
     return data;
   }
@@ -246,7 +246,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> isPreventClose() async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "isPreventClose"});
     return data;
   }
@@ -254,7 +254,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> isResizable() async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "isResizable"});
     return data;
   }
@@ -262,7 +262,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   /// ios
   @override
   Future<bool> setAsFrameless() async {
-    final data = await IoPlatformInterface._channel.invokeMethod(
+    final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "setAsFrameless"});
     return data;
   }
@@ -274,7 +274,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
       'isResizable': isResizable,
       "type": "setResizable"
     };
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, arguments);
     return data;
   }
@@ -286,7 +286,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
       ...size.toJson(),
       "type": "maximumSize"
     };
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, arguments);
     return data;
   }
@@ -297,7 +297,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
       ...size.toJson(),
       "type": "minimumSize"
     };
-    final data = await IoPlatformInterface._channel
+    final data = await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, arguments);
     return data;
   }

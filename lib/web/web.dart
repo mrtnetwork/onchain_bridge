@@ -5,34 +5,18 @@ export 'wallet/event.dart';
 export 'storage/storage.dart';
 import 'dart:async';
 import 'dart:js_interop';
+import 'package:on_chain_bridge/database/models/table.dart';
 import 'package:on_chain_bridge/exception/exception.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_bridge/on_chain_bridge.dart';
 import 'package:on_chain_bridge/web/api/api.dart';
-import 'package:on_chain_bridge/web/storage/safe_storage/safestorage.dart';
-import 'package:on_chain_bridge/web/storage/storage/index_db_storage.dart';
+import 'package:on_chain_bridge/web/storage/database/interface/interface.dart';
 
 OnChainBridgeInterface getPlatformInterface() => WebPlatformInterface._();
 
 class WebPlatformInterface extends OnChainBridgeInterface {
   WebPlatformInterface._();
-  IndexDbStorage? _storage;
-  IndexDbStorage get storage => _storage!;
-
-  Future<void> _initDatabase() async {
-    _storage?.close();
-    _storage = null;
-    _storage = await SafeStorage.init();
-    _storage?.database.onclose = () {
-      SafeStorage.init().then((e) => _storage = e);
-    }.toJS;
-  }
-
-  @override
-  Future<bool> containsKeySecure(String key) async {
-    final data = await storage.read(key);
-    return data != null;
-  }
+  final IDatabseInterfaceJS _database = IDatabseInterfaceJS();
 
   @override
   Future<DeviceInfo> getDeviceInfo() {
@@ -40,58 +24,8 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   }
 
   @override
-  Future<Map<String, String>> readAllSecure({String? prefix}) async {
-    return storage.all(prefix: prefix);
-  }
-
-  @override
-  Future<Map<String, String>> readMultipleSecure(List<String> keys) async {
-    return storage.reads(keys);
-  }
-
-  @override
-  Future<String?> readSecure(String key) async {
-    return storage.read(key);
-  }
-
-  @override
-  Future<List<String>> readKeys({String? prefix}) async {
-    final keys = await storage.readKeys(prefix: prefix);
-    return keys;
-  }
-
-  @override
-  Future<bool> removeAllSecure({String? prefix}) async {
-    if (prefix != null && prefix.isNotEmpty) {
-      final keys = await readKeys(prefix: prefix);
-      return removeMultipleSecure(keys);
-    }
-    await storage.clear();
-    await _initDatabase();
-    return true;
-  }
-
-  @override
-  Future<bool> removeMultipleSecure(List<String> keys) async {
-    await storage.removes(keys);
-    return true;
-  }
-
-  @override
-  Future<bool> removeSecure(String key) async {
-    await storage.remove(key);
-    return true;
-  }
-
-  @override
   Future<bool> secureFlag({required bool isSecure}) async {
     return false;
-  }
-
-  @override
-  Future<bool> writeSecure(String key, String value) async {
-    await storage.save(key, value);
-    return true;
   }
 
   @override
@@ -155,14 +89,17 @@ class WebPlatformInterface extends OnChainBridgeInterface {
     return jsWindow.barcode != null;
   }
 
+  // final _database = IDatabseInterfaceJS();
+
   @override
-  Future<PlatformConfig> getConfig() async {
-    await _initDatabase();
+  Future<PlatformConfig> init() async {
+    final open = await _database.openDatabase();
     final barcode = await hasBarcodeScanner().catchError((e) => false);
     return PlatformConfig(
         platform: platform,
         hasBarcodeScanner: barcode,
-        platformSupported: _storage != null,
+        platformSupported: open.isReady,
+        dbSupported: open.isReady,
         supportWebView: false,
         isExtension: isExtension);
   }
@@ -206,5 +143,41 @@ class WebPlatformInterface extends OnChainBridgeInterface {
     });
 
     return _onNetworkChange.stream;
+  }
+
+  @override
+  Future<DATA?> readDb<DATA extends ITableData>(ITableRead<DATA> params) {
+    return _database.readDb(params);
+  }
+
+  @override
+  Future<List<DATA>> readAllDb<DATA extends ITableData>(
+      ITableRead<DATA> params) {
+    return _database.readAllDb(params);
+  }
+
+  @override
+  Future<bool> removeDb(ITableRemove params) {
+    return _database.removeDb(params);
+  }
+
+  @override
+  Future<bool> writeDb(ITableInsertOrUpdate params) {
+    return _database.writeDb(params);
+  }
+
+  @override
+  Future<bool> writeAllDb(List<ITableInsertOrUpdate> params) {
+    return _database.writeAllDb(params);
+  }
+
+  @override
+  Future<bool> removeAllDb(List<ITableRemove> params) {
+    return _database.removeAllDb(params);
+  }
+
+  @override
+  Future<bool> dropDb(ITableDrop params) {
+    return _database.dropDb(params);
   }
 }

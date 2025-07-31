@@ -19,6 +19,8 @@ class ChromeStorage extends SafeStorage {
   @override
   Future<void> clear() async {
     await _storage.clear_();
+    final key = SafestorageUtils.getOrCreateKey();
+    await setItem(StorageConst.key, key.$1);
   }
 
   @override

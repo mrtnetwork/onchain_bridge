@@ -341,11 +341,11 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
         case "path":
             var keyValues = [String: String]()
             let temporaryDirectoryURL = getTemporaryDirectory()
-            keyValues["cache"]=temporaryDirectoryURL.absoluteString;
+            keyValues["cache"]=temporaryDirectoryURL.path;
             let documentsDirectoryURL = getApplicationDocumentsDirectory()
-            keyValues["document"]=documentsDirectoryURL.absoluteString;
+            keyValues["document"]=documentsDirectoryURL.path;
             let applicationSupportDirectoryURL = getApplicationSupportDirectory()
-            keyValues["support"]=applicationSupportDirectoryURL.absoluteString;
+            keyValues["support"]=applicationSupportDirectoryURL.path;
             result(keyValues)
         case "lunch_uri":
             guard let args =  call.arguments as? [String:Any],

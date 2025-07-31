@@ -16,6 +16,8 @@ class WebStorage extends SafeStorage {
   @override
   Future<void> clear() async {
     localStorage.clear();
+    final key = SafestorageUtils.getOrCreateKey();
+    localStorage.setItem(StorageConst.key, key.$1);
   }
 
   @override

@@ -291,6 +291,8 @@ extension type Blob._(JSObject _) implements JSObject {
   }
   external JSAny? get blobParts;
   external JSObject? get options;
+
+  external JSPromise<JSArrayBuffer> arrayBuffer();
 }
 
 extension type BlobOptions._(JSObject _) implements JSAny {
@@ -348,16 +350,19 @@ extension type WorkerOptions._(JSObject _) implements JSObject {
   external set name(String? type);
 }
 @JS("Event")
-extension type WebEvent._(JSObject _) implements EventInit {
-  external factory WebEvent(String? type, EventInit? options);
+extension type WebEvent<TARGET extends JSAny?>._(JSObject _)
+    implements EventInit<TARGET> {
+  external factory WebEvent(String? type, EventInit<TARGET>? options);
   external String? get type;
 }
 @JS()
-extension type EventInit._(JSObject _) implements JSObject {
+extension type EventInit<TARGET extends JSAny?>._(JSObject _)
+    implements JSObject {
   external bool? get bubbles;
   external bool? get cancelable;
   external bool? get composed;
   external JSAny? get detail;
+  external TARGET get target;
   external set bubbles(bool? bubbles);
   external set cancelable(bool? cancelable);
   external set composed(bool? composed);

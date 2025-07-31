@@ -9,13 +9,11 @@ class _IoPlatformConst {
 class IoPlatformInterface extends OnChainBridgeInterface {
   static const MethodChannel _methodChannel =
       MethodChannel(NativeMethodsConst.channelAuthory);
-
   StreamController<BarcodeScannerResult>? _barcodeListener;
-
   static const EventChannel _networkChannel = EventChannel(
       'com.mrtnetwork.on_chain_bridge.methodChannel/network_status');
-
-  static MethodChannel get _channel => _methodChannel;
+  static MethodChannel get channel => _methodChannel;
+  final IDatabseInterfaceIo _database = IDatabseInterfaceIo();
   IoPlatformInterface() {
     if (Platform.isWindows || Platform.isMacOS) {
       _desktop = DesktopPlatformInterface();
@@ -50,116 +48,22 @@ class IoPlatformInterface extends OnChainBridgeInterface {
 
   @override
   Future<bool> secureFlag({required bool isSecure}) async {
-    final secure = await _channel.invokeMethod<bool>("secureFlag", {
+    final secure = await channel.invokeMethod<bool>("secureFlag", {
       'secure': isSecure,
     });
 
     return secure ?? false;
   }
 
-  /// ios
-  @override
-  Future<bool> containsKeySecure(String key) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"key": key, "type": "containsKey"});
-
-    return data;
-  }
-
-  /// ios
-  @override
-  Future<Map<String, String>> readAllSecure({String? prefix}) async {
-    if (prefix != null && prefix.isNotEmpty) {
-      final keys = await readKeys(prefix: prefix);
-      return readMultipleSecure(keys);
-    }
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod, {"type": "readAll"});
-
-    Map<String, String> values = Map<String, String>.from(data!);
-    if (prefix != null) {
-      values = values..removeWhere((k, v) => !k.startsWith(prefix));
-    }
-    return Map<String, String>.from(values);
-  }
-
-  /// ios
-  @override
-  Future<String?> readSecure(String key) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod, {"key": key, "type": "read"});
-
-    return data;
-  }
-
-  @override
-  Future<List<String>> readKeys({String? prefix}) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"key": prefix ?? '', "type": "readKeys"});
-    return (data as List).cast<String>();
-  }
-
-  /// ios
-  @override
-  Future<bool> removeAllSecure({String? prefix}) async {
-    if (prefix != null && prefix.isNotEmpty) {
-      final keys = await readKeys(prefix: prefix);
-      return removeMultipleSecure(keys);
-    }
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod, {"type": "removeAll"});
-
-    return data;
-  }
-
-  /// ios
-  @override
-  Future<bool> writeSecure(String key, String value) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"type": "write", "key": key, "value": value});
-
-    return data;
-  }
-
-  /// ios
-  @override
-  Future<bool> removeSecure(String key) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod, {"type": "remove", "key": key});
-    return data;
-  }
-
   @override
   Future<DeviceInfo> getDeviceInfo() async {
-    final data = await _channel.invokeMethod(NativeMethodsConst.deviceInfo, {});
+    final data = await channel.invokeMethod(NativeMethodsConst.deviceInfo, {});
     return DeviceInfo.fromJson(Map<String, dynamic>.from(data));
-  }
-
-  /// ios
-  @override
-  Future<Map<String, String>> readMultipleSecure(List<String> keys) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"keys": keys, "type": "readMultiple"});
-
-    return Map<String, String>.from(data);
-  }
-
-  /// ios
-  @override
-  Future<bool> removeMultipleSecure(List<String> keys) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"keys": keys, "type": "removeMultiple"});
-    return data;
   }
 
   @override
   Future<bool> share(Share share) async {
-    final data = await _channel.invokeMethod(
+    final data = await channel.invokeMethod(
         NativeMethodsConst.shareMethod, share.toJson());
     return data;
   }
@@ -167,14 +71,14 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   // ios
   @override
   Future<AppPath> path() async {
-    final data = await _channel.invokeMethod(NativeMethodsConst.pathMethod, {});
+    final data = await channel.invokeMethod(NativeMethodsConst.pathMethod, {});
     return AppPath.fromJson(Map<String, dynamic>.from(data));
   }
 
   // ios
   @override
   Future<bool> launchUri(String uri) async {
-    final data = await _channel
+    final data = await channel
         .invokeMethod(NativeMethodsConst.launchUriMethod, {"uri": uri});
     return data;
   }
@@ -194,10 +98,10 @@ class IoPlatformInterface extends OnChainBridgeInterface {
     if (_barcodeListener != null) {
       throw const OnChainBridgeException("Service already running.");
     }
-    await _channel.invokeMethod("startBarcodeScanner", param.toJson());
+    await channel.invokeMethod("startBarcodeScanner", param.toJson());
     _barcodeListener ??= StreamController();
     _barcodeListener?.onCancel = () {
-      _channel.invokeMethod("stopBarcodeScanner");
+      channel.invokeMethod("stopBarcodeScanner");
       _barcodeListener?.close();
       _barcodeListener = null;
     };
@@ -206,7 +110,7 @@ class IoPlatformInterface extends OnChainBridgeInterface {
 
   @override
   Future<void> stopBarcodeScanner() async {
-    await _channel.invokeMethod("stopBarcodeScanner", {});
+    await channel.invokeMethod("stopBarcodeScanner", {});
     _barcodeListener?.close();
     _barcodeListener = null;
   }
@@ -215,17 +119,19 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   Future<bool> hasBarcodeScanner() async {
     if (Platform.isWindows || Platform.isLinux) return false;
     if (Platform.isAndroid) return true;
-    final hasBarcode = await _channel.invokeMethod<bool>("hasBarcodeScanner");
+    final hasBarcode = await channel.invokeMethod<bool>("hasBarcodeScanner");
     return hasBarcode ?? false;
   }
 
   @override
-  Future<PlatformConfig> getConfig() async {
+  Future<PlatformConfig> init() async {
+    final db = await _database.openDatabase();
     final barcode = await hasBarcodeScanner().catchError((e) => false);
     return PlatformConfig(
         platform: platform,
         hasBarcodeScanner: barcode,
         platformSupported: true,
+        dbSupported: db.isReady,
         supportWebView: Platform.isAndroid || Platform.isMacOS,
         isExtension: false);
   }
@@ -272,4 +178,40 @@ class IoPlatformInterface extends OnChainBridgeInterface {
       .where((e) => e.type == AppNativeEventType.internet)
       .cast<AppNativeEventConnection>()
       .map((e) => e.isOnline);
+
+  @override
+  Future<DATA?> readDb<DATA extends ITableData>(ITableRead<DATA> params) {
+    return _database.readDb(params);
+  }
+
+  @override
+  Future<List<DATA>> readAllDb<DATA extends ITableData>(
+      ITableRead<DATA> params) {
+    return _database.readAllDb(params);
+  }
+
+  @override
+  Future<bool> removeDb(ITableRemove params) {
+    return _database.removeDb(params);
+  }
+
+  @override
+  Future<bool> writeDb(ITableInsertOrUpdate params) {
+    return _database.writeDb(params);
+  }
+
+  @override
+  Future<bool> writeAllDb(List<ITableInsertOrUpdate> params) {
+    return _database.writeAllDb(params);
+  }
+
+  @override
+  Future<bool> removeAllDb(List<ITableRemove> params) {
+    return _database.removeAllDb(params);
+  }
+
+  @override
+  Future<bool> dropDb(ITableDrop params) {
+    return _database.dropDb(params);
+  }
 }

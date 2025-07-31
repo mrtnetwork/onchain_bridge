@@ -26,7 +26,7 @@ class ScriptMessageHandler: NSObject, WKScriptMessageHandler {
             channel.invokeMethod(WebViewConst.webView, arguments: messageBody)
             return
         default:
-            break
+          	  break
         }
         
         let data = hexStringToBytes(dataHex)

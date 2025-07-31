@@ -69,7 +69,7 @@ class WebViewIoInterface implements PlatformWebView {
     required String viewType,
     Map<String, dynamic> args = const {},
   }) async {
-    final result = await IoPlatformInterface._channel.invokeMethod(
+    final result = await IoPlatformInterface.channel.invokeMethod(
       _WebViewConst.webView,
       {"type": type, "id": viewType, ...args},
     );
