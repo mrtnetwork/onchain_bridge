@@ -41,21 +41,26 @@ class IDBOpenDBRequestCompleter<T extends IDBDatabase?> {
   Future<T> get wait => completer.future;
 }
 
-class IDBRequestCompleter<T extends JSAny?> {
-  final Completer<T> completer;
+typedef ONREQUESTRESULT<T extends JSAny?, R> = R Function(T r);
+
+class IDBRequestCompleter<T extends JSAny?, R extends Object?> {
+  final Completer<R> completer;
   final IDBRequest<T> request;
   const IDBRequestCompleter._({required this.request, required this.completer});
-  factory IDBRequestCompleter({required IDBRequest<T> request}) {
-    final Completer<T> completer = Completer<T>();
+  factory IDBRequestCompleter(
+      {required IDBRequest<T> request,
+      required ONREQUESTRESULT<T, R> onResult}) {
+    final Completer<R> completer = Completer<R>();
     request.onerror = () {
       completer.completeError(IDatabaseException(
           "IndexedDB error: the database operation failed."));
     }.toJS;
     request.onsuccess = (WebEvent<IDBRequest<T>> event) {
       final T result = event.target.result;
-      completer.complete(result);
+      final r = onResult(result);
+      completer.complete(r);
     }.toJS;
-    return IDBRequestCompleter<T>._(request: request, completer: completer);
+    return IDBRequestCompleter<T, R>._(request: request, completer: completer);
   }
-  Future<T> get wait => completer.future;
+  Future<R> get wait => completer.future;
 }

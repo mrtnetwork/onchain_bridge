@@ -22,8 +22,8 @@ extension type IDatabaseTableJSStructAScheme._(JSObject _) implements JSAny {
       ..createdAt = createdAt;
     return obj;
   }
-  external int get id;
-  external set id(int _);
+  external int? get id;
+  external set id(int? _);
   external int get storage;
   external set storage(int _);
   @JS("storage_id")
@@ -46,7 +46,7 @@ extension type IDatabaseTableJSStructAScheme._(JSObject _) implements JSAny {
       return ITableDataStructA(
           storage: storage,
           storageId: storageId,
-          id: id,
+          id: id!,
           key: key,
           keyA: keyA,
           data: data.map((e) => e.toDartInt).toList(),

@@ -36,7 +36,7 @@ class IDatabaseTableJSStructA
   const IDatabaseTableJSStructA(this.tableName);
 
   Future<List<ITableDataStructA>> _execute(
-      {required IDatabaseTableJsTransaction store,
+      {required IDatabaseJS db,
       IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc,
       bool remove = false,
       int? storage,
@@ -47,17 +47,25 @@ class IDatabaseTableJSStructA
       int? createdAtGt,
       int? limit,
       int? offset}) async {
+    final transaction = db.db
+        .transaction([tableName.toJS].toJS, IndexDbStorageMode.readwrite.name);
+    final store = transaction.objectStore(tableName);
     IDBIndex? index;
     if (storage != null && storageId != null && key != null && keyA != null) {
-      index = store.store.index("unique_index");
+      index = store.index("unique_index");
       final params = [storage.toJS, storageId.toJS, key.toJS, keyA.toJS].toJS;
       final request = index.getObject<IDatabaseTableJSStructAScheme?>(params);
-      final result =
-          (await IDBRequestCompleter(request: request).wait)?.toData(tableName);
+      final result = (await IDBRequestCompleter(
+        request: request,
+        onResult: (r) {
+          return r?.toData(tableName);
+        },
+      ).wait);
       if (result == null) return [];
       if (remove) {
-        final deleteReq = store.store.delete(result.id.toJS);
-        await IDBRequestCompleter(request: deleteReq).wait;
+        final deleteReq = store.delete(result.id.toJS);
+        await IDBRequestCompleter(request: deleteReq, onResult: (r) => null)
+            .wait;
         return [];
       }
       return [result];
@@ -65,23 +73,23 @@ class IDatabaseTableJSStructA
 
     IDBKeyRange? keyRange;
     if (storage != null && storageId != null) {
-      index = store.store.index("storage_and_storage_id_index");
+      index = store.index("storage_and_storage_id_index");
       keyRange = IDBKeyRange.only([storage.toJS, storageId.toJS].toJS);
     } else if (storageId != null) {
-      index = store.store.index("storage_id_index");
+      index = store.index("storage_id_index");
       keyRange = IDBKeyRange.only([storageId.toJS].toJS);
     } else if (storage != null) {
-      index = store.store.index("storage_index");
+      index = store.index("storage_index");
       keyRange = IDBKeyRange.only([storage.toJS].toJS);
     }
-    IDBRequest<IDBCursorWithValue<IDatabaseTableJSStructAScheme>> request;
+    IDBRequest<IDBCursorWithValue<IDatabaseTableJSStructAScheme?>> request;
     final direction = ordering == IDatabaseQueryOrdering.desc ? 'prev' : 'next';
     if (index == null) {
-      request = store.store
-          .openCursor<IDatabaseTableJSStructAScheme>(keyRange, direction);
+      request =
+          store.openCursor<IDatabaseTableJSStructAScheme?>(keyRange, direction);
     } else {
       request =
-          index.openCursor<IDatabaseTableJSStructAScheme>(keyRange, direction);
+          index.openCursor<IDatabaseTableJSStructAScheme?>(keyRange, direction);
     }
     final Completer completer = Completer();
     request.onerror = () {
@@ -92,18 +100,11 @@ class IDatabaseTableJSStructA
     bool skip = false;
 
     final List<IDatabaseTableJSStructAScheme> matched = [];
-
-    StreamSubscription? sub;
-    sub = request
-        .streamObject<
-                WebEvent<
-                    IDBRequest<
-                        IDBCursorWithValue<IDatabaseTableJSStructAScheme>?>>>(
-            "success")
-        .listen((event) {
+    request.onsuccess = (WebEvent<
+            IDBRequest<IDBCursorWithValue<IDatabaseTableJSStructAScheme>?>>
+        event) {
       final cursor = event.target.result;
       if (cursor == null) {
-        sub?.cancel();
         completer.complete();
         return;
       }
@@ -130,14 +131,13 @@ class IDatabaseTableJSStructA
         matched.add(value);
       }
       if (limit != null && matched.length >= limit) {
-        sub?.cancel();
         completer.complete();
       } else {
         cursor.continue_();
       }
-    });
+    }.toJS;
+
     await completer.future;
-    sub.cancel();
     if (remove) {
       return [];
     } else {
@@ -152,7 +152,7 @@ class IDatabaseTableJSStructA
   Future<ITableDataStructA?> read(
       IDatabaseJS db, ITableReadStructA query) async {
     final result = await _execute(
-        store: db.getStore(this, mode: IndexDbStorageMode.readonly),
+        db: db,
         ordering: query.ordering,
         createdAtGt: query.createdAtGt,
         createdAtLt: query.createdAtLt,
@@ -170,7 +170,7 @@ class IDatabaseTableJSStructA
   Future<List<ITableDataStructA>> readAll(
       IDatabaseJS db, ITableReadStructA query) async {
     return await _execute(
-        store: db.getStore(this, mode: IndexDbStorageMode.readonly),
+        db: db,
         ordering: query.ordering,
         createdAtGt: query.createdAtGt,
         createdAtLt: query.createdAtLt,
@@ -187,7 +187,7 @@ class IDatabaseTableJSStructA
   Future<bool> remove(IDatabaseJS db, ITableRemoveStructA query,
       {IDatabaseTableJsTransaction? store}) async {
     await _execute(
-        store: store ?? db.getStore(this),
+        db: db,
         key: query.key,
         keyA: query.keyA,
         storage: query.storage,
@@ -217,15 +217,61 @@ class IDatabaseTableJSStructA
       (data.key ?? '').toJS,
       (data.keyA ?? '').toJS
     ].toJS);
-    final completer = IDBRequestCompleter(request: request);
-    final result = await completer.wait;
-    if (result != null) {
-      result.data = data.data.map((e) => e.toJS).toList().toJS;
-      final request = store.store.put<JSNumber>(result);
-      final completer = IDBRequestCompleter(request: request);
-      await completer.wait;
-    } else {
-      final obj = IDatabaseTableJSStructAScheme.setup(
+    final completer = IDBRequestCompleter(
+      request: request,
+      onResult: (r) {
+        r ??= IDatabaseTableJSStructAScheme.setup(
+            storage: data.storage,
+            storageId: data.storageId,
+            key: data.key ?? '',
+            keyA: data.keyA ?? '',
+            createdAt:
+                IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
+            data: data.data);
+        if (r.id != null) {
+          r.data = data.data.map((e) => e.toJS).toList().toJS;
+          final request = store!.store.put<JSNumber>(r);
+          return IDBRequestCompleter(request: request, onResult: (r) => null);
+          // await completer.wait;
+        } else {
+          final obj = IDatabaseTableJSStructAScheme.setup(
+              storage: data.storage,
+              storageId: data.storageId,
+              key: data.key ?? '',
+              keyA: data.keyA ?? '',
+              createdAt:
+                  IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
+              data: data.data);
+
+          final request = store!.store.add<JSNumber>(obj);
+          return IDBRequestCompleter(request: request, onResult: (r) => null);
+        }
+      },
+    );
+    await completer.wait;
+    return true;
+  }
+
+  @override
+  Future<bool> writeAll(
+      IDatabaseJS db, List<ITableInsertOrUpdateStructA> data) async {
+    if (data.isEmpty) return false;
+    if (data.length == 1) {
+      return write(db, data.first);
+    }
+    final store = db.getStore(this);
+    final index = store.store.index("unique_index");
+    final request = index.getObject<IDatabaseTableJSStructAScheme?>([
+      data.first.storage.toJS,
+      data.first.storageId.toJS,
+      (data.first.key ?? '').toJS,
+      (data.first.keyA ?? '').toJS
+    ].toJS);
+
+    Completer putOrAdd(
+        IDatabaseTableJSStructAScheme? r, ITableInsertOrUpdateStructA data) {
+      r?.data = data.data.map((e) => e.toJS).toList().toJS;
+      r ??= IDatabaseTableJSStructAScheme.setup(
           storage: data.storage,
           storageId: data.storageId,
           key: data.key ?? '',
@@ -233,20 +279,44 @@ class IDatabaseTableJSStructA
           createdAt:
               IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
           data: data.data);
-      final request = store.store.add<JSNumber>(obj);
-      final completer = IDBRequestCompleter(request: request);
-      await completer.wait;
+      if (r.id != null) {
+        final request = store.store.put<JSNumber>(r);
+        return IDBRequestCompleter(
+          request: request,
+          onResult: (r) => null,
+        ).completer;
+        // await completer.wait;
+      } else {
+        final request = store.store.add<JSNumber>(r);
+        return IDBRequestCompleter(request: request, onResult: (r) => null)
+            .completer;
+      }
     }
-    return true;
-  }
 
-  @override
-  Future<bool> writeAll(
-      IDatabaseJS db, List<ITableInsertOrUpdateStructA> data) async {
-    final store = db.getStore(this);
-    for (final i in data) {
-      await write(db, i, store: store);
-    }
+    final completer = IDBRequestCompleter(
+      request: request,
+      onResult: (result) {
+        return [
+          putOrAdd(result, data.first),
+          ...List.generate(data.length - 1, (l) {
+            final i = data[l + 1];
+            return IDBRequestCompleter(
+              request: index.getObject<IDatabaseTableJSStructAScheme?>([
+                i.storage.toJS,
+                i.storageId.toJS,
+                (i.key ?? '').toJS,
+                (i.keyA ?? '').toJS
+              ].toJS),
+              onResult: (result) {
+                return putOrAdd(result, i);
+              },
+            ).completer;
+          })
+        ];
+      },
+    );
+    final r = await completer.wait;
+    await Future.wait(r.map((e) => e.future));
     return true;
   }
 

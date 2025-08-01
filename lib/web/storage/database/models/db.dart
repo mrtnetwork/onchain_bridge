@@ -88,6 +88,7 @@ class IDatabaseJS extends IDatabase {
     if (newDatabase == null) {
       throw IDatabaseJSConstants.onDatabaseBlockError;
     }
+    if (!upgradable) newDatabase.onversionchange = onDbChanged.toJS;
     return newDatabase;
   }
 
