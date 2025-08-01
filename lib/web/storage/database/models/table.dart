@@ -230,7 +230,8 @@ class IDatabaseTableJSStructA
           storageId: data.storageId,
           key: data.key ?? '',
           keyA: data.keyA ?? '',
-          createdAt: IDatabaseUtils.createOrConvertDateTimeSecound(),
+          createdAt:
+              IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
           data: data.data);
       final request = store.store.add<JSNumber>(obj);
       final completer = IDBRequestCompleter(request: request);

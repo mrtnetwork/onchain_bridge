@@ -103,6 +103,8 @@ class IDatabseInterfaceIo extends IDatabseInterface<IDatabaseIo> {
     if (_status != InitializeDatabaseStatus.init) return _status;
     if (Platform.isAndroid) {
       _library = DynamicLibrary.open('libsqlite3mc.so');
+    } else if (Platform.isWindows) {
+      _library = DynamicLibrary.open('libsqlite3mc.dll');
     } else {
       _library = DynamicLibrary.open('libsqlite3mc.dylib');
     }

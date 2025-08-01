@@ -5,14 +5,12 @@ class PlatformConfig {
   final AppPlatform platform;
   final bool hasBarcodeScanner;
   final int storageVersion;
-  final bool platformSupported;
   final bool supportWebView;
   final bool isExtension;
   final bool dbSupported;
   const PlatformConfig(
       {required this.platform,
       required this.hasBarcodeScanner,
-      required this.platformSupported,
       required this.supportWebView,
       required this.isExtension,
       required this.dbSupported,

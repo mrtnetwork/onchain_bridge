@@ -203,6 +203,7 @@ class ITableInsertOrUpdateStructA extends ITableInsertOrUpdate {
   final int storageId;
   final String? key;
   final String? keyA;
+  final DateTime? createdAt;
 
   ITableInsertOrUpdateStructA({
     required super.data,
@@ -210,6 +211,7 @@ class ITableInsertOrUpdateStructA extends ITableInsertOrUpdate {
     required this.storageId,
     this.key,
     this.keyA,
+    this.createdAt,
     required super.tableName,
   }) : super(struct: IDatabaseTableStruct.a);
 

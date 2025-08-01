@@ -130,7 +130,6 @@ class IoPlatformInterface extends OnChainBridgeInterface {
     return PlatformConfig(
         platform: platform,
         hasBarcodeScanner: barcode,
-        platformSupported: true,
         dbSupported: db.isReady,
         supportWebView: Platform.isAndroid || Platform.isMacOS,
         isExtension: false);

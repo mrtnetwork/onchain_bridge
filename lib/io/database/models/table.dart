@@ -54,7 +54,7 @@ class IDatabaseTableIoStructA
     key TEXT NOT NULL,
     key_a TEXT NOT NULL,
     data BLOB NOT NULL,
-    created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+    created_at INTEGER NOT NULL,
     UNIQUE(storage, storage_id, key, key_a)
   );
   ''';
@@ -68,8 +68,9 @@ INSERT INTO $tableName (
   storage_id,
   key,
   key_a,
-  data
-) VALUES (?, ?, ?, ?, ?)
+  data,
+  created_at
+) VALUES (?, ?, ?, ?, ?, ?)
 ON CONFLICT(storage, storage_id, key, key_a) DO UPDATE SET
   data = excluded.data;
   ''';
@@ -309,6 +310,11 @@ ON CONFLICT(storage, storage_id, key, key_a) DO UPDATE SET
         db.bindTextTransient(stmt: stmt, index: 3, value: data.key ?? '');
         db.bindTextTransient(stmt: stmt, index: 4, value: data.keyA ?? '');
         db.bindBlobTransient(stmt: stmt, index: 5, value: data.data);
+        db.bindInt64(
+            stmt: stmt,
+            index: 6,
+            value:
+                IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt));
         return db.sqlite3Step(
           s: stmt,
           operation: IDatabaseOperation.insertOrUpdate,

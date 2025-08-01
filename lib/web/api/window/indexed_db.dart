@@ -24,6 +24,7 @@ extension type IDBDatabase._(JSObject _) implements JSAny {
       [IDBObjectStoreCreateObjectStore? opetions]);
   external void deleteObjectStore(String name);
   external set onclose(JSFunction? _);
+  external set onversionchange(JSFunction? _);
 }
 @JS()
 extension type IDBObjectStoreCreateObjectStore._(JSObject _) implements JSAny {

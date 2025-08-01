@@ -3,6 +3,7 @@ import 'dart:js_interop';
 
 import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain_bridge/web/api/window/indexed_db.dart';
+import 'package:on_chain_bridge/web/storage/database/constants/constants.dart';
 import 'package:on_chain_bridge/web/web.dart';
 
 typedef ONUPGRADENEEDED<T extends IDBDatabase?> = void Function(T);
@@ -14,16 +15,14 @@ class IDBOpenDBRequestCompleter<T extends IDBDatabase?> {
       {required this.request, required this.completer});
   factory IDBOpenDBRequestCompleter(
       {required IDBOpenDBRequest<T> request,
-      required ONUPGRADENEEDED<T> onUpdaradeNeeded}) {
+      required ONUPGRADENEEDED<T> onUpgradeNeeded}) {
     final Completer<T> completer = Completer<T>();
     request.onupgradeneeded = (WebEvent<IDBOpenDBRequest<T>> event) {
       final T result = event.target.result;
-      onUpdaradeNeeded(result);
+      onUpgradeNeeded(result);
     }.toJS;
     request.onblocked = (IDBVersionChangeEvent _) {
-      completer.completeError(IDatabaseException(
-        "IndexedDB upgrade blocked: another tab or window is still using the database.",
-      ));
+      completer.completeError(IDatabaseJSConstants.onDatabaseBlockError);
     }.toJS;
     request.onerror = () {
       completer.completeError(IDatabaseException(
@@ -31,6 +30,8 @@ class IDBOpenDBRequestCompleter<T extends IDBDatabase?> {
       ));
     }.toJS;
     request.onsuccess = (WebEvent<IDBOpenDBRequest<T>> event) {
+      if (completer.isCompleted) return;
+
       final T result = event.target.result;
       completer.complete(result);
     }.toJS;

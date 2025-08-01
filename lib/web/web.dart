@@ -98,7 +98,6 @@ class WebPlatformInterface extends OnChainBridgeInterface {
     return PlatformConfig(
         platform: platform,
         hasBarcodeScanner: barcode,
-        platformSupported: open.isReady,
         dbSupported: open.isReady,
         supportWebView: false,
         isExtension: isExtension);
