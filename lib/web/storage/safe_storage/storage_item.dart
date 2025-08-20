@@ -14,7 +14,7 @@ class StorageItem {
   }
 
   CborListValue toCbor() {
-    return CborListValue.fixedLength(
+    return CborListValue.definite(
         [CborBytesValue(nonce), CborBytesValue(encryptedValue)]);
   }
 }

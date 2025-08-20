@@ -16,7 +16,7 @@ OnChainBridgeInterface getPlatformInterface() => WebPlatformInterface._();
 
 class WebPlatformInterface extends OnChainBridgeInterface {
   WebPlatformInterface._();
-  final IDatabseInterfaceJS _database = IDatabseInterfaceJS();
+  late final IDatabseInterfaceJS database;
 
   @override
   Future<DeviceInfo> getDeviceInfo() {
@@ -92,8 +92,9 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   // final _database = IDatabseInterfaceJS();
 
   @override
-  Future<PlatformConfig> init() async {
-    final open = await _database.openDatabase();
+  Future<PlatformConfig> init({bool upgradableDatebase = true}) async {
+    database = IDatabseInterfaceJS(upgradable: upgradableDatebase);
+    final open = await database.openDatabase();
     final barcode = await hasBarcodeScanner().catchError((e) => false);
     return PlatformConfig(
         platform: platform,
@@ -146,37 +147,37 @@ class WebPlatformInterface extends OnChainBridgeInterface {
 
   @override
   Future<DATA?> readDb<DATA extends ITableData>(ITableRead<DATA> params) {
-    return _database.readDb(params);
+    return database.readDb(params);
   }
 
   @override
   Future<List<DATA>> readAllDb<DATA extends ITableData>(
       ITableRead<DATA> params) {
-    return _database.readAllDb(params);
+    return database.readAllDb(params);
   }
 
   @override
   Future<bool> removeDb(ITableRemove params) {
-    return _database.removeDb(params);
+    return database.removeDb(params);
   }
 
   @override
   Future<bool> writeDb(ITableInsertOrUpdate params) {
-    return _database.writeDb(params);
+    return database.writeDb(params);
   }
 
   @override
   Future<bool> writeAllDb(List<ITableInsertOrUpdate> params) {
-    return _database.writeAllDb(params);
+    return database.writeAllDb(params);
   }
 
   @override
   Future<bool> removeAllDb(List<ITableRemove> params) {
-    return _database.removeAllDb(params);
+    return database.removeAllDb(params);
   }
 
   @override
   Future<bool> dropDb(ITableDrop params) {
-    return _database.dropDb(params);
+    return database.dropDb(params);
   }
 }
