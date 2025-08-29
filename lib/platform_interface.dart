@@ -12,5 +12,7 @@ class PlatformInterface {
   static bool get isWindows => appPlatform == AppPlatform.windows;
   static bool get isWeb => appPlatform == AppPlatform.web;
   static bool get isMacos => appPlatform == AppPlatform.macos;
+  static bool get isLinux => appPlatform == AppPlatform.linux;
+
   static PlatformWebView get webViewController => instance.webView;
 }

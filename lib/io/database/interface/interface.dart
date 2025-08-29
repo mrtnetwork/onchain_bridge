@@ -14,12 +14,12 @@ import 'package:on_chain_bridge/synchronized/basic_lock.dart';
 typedef ONGETAPPPATH = Future<AppPath> Function();
 
 class IDatabseInterfaceIo extends IDatabseInterface<IDatabaseIo> {
-  AppPath? _appPath;
+  final AppPath appPath;
   final SynchronizedLock _lock = SynchronizedLock();
   late final DynamicLibrary _library;
   InitializeDatabaseStatus _status = InitializeDatabaseStatus.init;
   IDatabaseIo? _databases;
-  IDatabseInterfaceIo();
+  IDatabseInterfaceIo({required this.appPath});
 
   String _joinPathWithRoot(List<String> parts) {
     bool isAbsolute =
@@ -32,17 +32,12 @@ class IDatabseInterfaceIo extends IDatabseInterface<IDatabaseIo> {
   }
 
   Future<String> _dbPath() async {
-    AppPath? path = _appPath;
-    if (path == null) {
-      final data = await IoPlatformInterface.channel
-          .invokeMethod(NativeMethodsConst.pathMethod, {});
-      _appPath = path = AppPath.fromJson(Map<String, dynamic>.from(data));
-    }
-    return _joinPathWithRoot([path.support, IDatabaseConst.dbFolderName]);
+    return _joinPathWithRoot([appPath.support, IDatabaseConst.dbFolderName]);
   }
 
   Future<String> _getDbUrl(String dbName) async {
     final path = await _dbPath();
+    print("db path $path");
     Directory(path).createSync(recursive: true);
     return _joinPathWithRoot([path, "$dbName.db"]);
   }
@@ -101,7 +96,7 @@ class IDatabseInterfaceIo extends IDatabseInterface<IDatabaseIo> {
 
   Future<InitializeDatabaseStatus> _initDb() async {
     if (_status != InitializeDatabaseStatus.init) return _status;
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isLinux) {
       _library = DynamicLibrary.open('libsqlite3mc.so');
     } else if (Platform.isWindows) {
       _library = DynamicLibrary.open('libsqlite3mc.dll');

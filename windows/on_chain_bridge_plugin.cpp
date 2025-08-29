@@ -690,7 +690,7 @@ namespace on_chain_bridge
 					Init();
 					result->Success(true);
 				}
-				else if (methodType == "setbounds")
+				else if (methodType == "setBounds")
 				{
 					const flutter::EncodableMap &argsRef = *args;
 					SetBounds(argsRef);
@@ -761,7 +761,7 @@ namespace on_chain_bridge
 				{
 					result->Success(IsPreventClose());
 				}
-				else if (methodType == "SetPreventClose")
+				else if (methodType == "setPreventClose")
 				{
 					const flutter::EncodableMap &argsRef = *args;
 					SetPreventClose(argsRef);

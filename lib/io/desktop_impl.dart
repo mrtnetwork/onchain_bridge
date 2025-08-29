@@ -52,6 +52,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
     if (eventName == null) {
       return;
     }
+    // print("got $eventName ${listeners}");
     for (final WindowListener listener in listeners) {
       if (!_listeners.contains(listener)) {
         return;
@@ -91,19 +92,21 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   @override
   Future<void> setBounds(
       {WidgetRect? bounds,
-      required double pixelRatio,
+      double? pixelRatio,
       WidgetOffset? position,
       WidgetSize? size,
       bool animate = false}) async {
+    assert(pixelRatio != null || Platform.isLinux);
     final Map<String, dynamic> arguments = {
-      "type": "setbounds",
-      'devicePixelRatio': pixelRatio,
+      "type": "setBounds",
+      if (!Platform.isLinux) 'devicePixelRatio': pixelRatio ?? 2.0,
       'x': bounds?.x ?? position?.x,
       'y': bounds?.y ?? position?.y,
       'width': bounds?.width ?? size?.width,
       'height': bounds?.height ?? size?.height,
       'animate': animate,
     }..removeWhere((key, value) => value == null);
+    print("Arguments $arguments");
     await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, arguments);
   }
@@ -169,7 +172,7 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
   Future<bool> setFullScreen(bool isFullScreen) async {
     final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager,
-        {"type": "restore", "isFullScreen": isFullScreen});
+        {"type": "setFullScreen", "isFullScreen": isFullScreen});
     return data;
   }
 
@@ -217,6 +220,14 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
 
   /// ios
   @override
+  Future<bool> isFocused() async {
+    final data = await IoPlatformInterface.channel
+        .invokeMethod(NativeMethodsConst.windowsManager, {"type": "isFocused"});
+    return data;
+  }
+
+  /// ios
+  @override
   Future<WidgetRect> getBounds(double pixelRatio) async {
     final Map<String, dynamic> arguments = {
       'devicePixelRatio': pixelRatio,
@@ -237,17 +248,17 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
 
   /// ios
   @override
-  Future<bool> isFocused() async {
-    final data = await IoPlatformInterface.channel
-        .invokeMethod(NativeMethodsConst.windowsManager, {"type": "isFocused"});
-    return data;
-  }
-
-  /// ios
-  @override
   Future<bool> isPreventClose() async {
     final data = await IoPlatformInterface.channel.invokeMethod(
         NativeMethodsConst.windowsManager, {"type": "isPreventClose"});
+    return data;
+  }
+
+  @override
+  Future<bool> setPreventClose(bool preventClose) async {
+    final data = await IoPlatformInterface.channel.invokeMethod(
+        NativeMethodsConst.windowsManager,
+        {"type": "SetPreventClose", "isPreventClose": preventClose});
     return data;
   }
 

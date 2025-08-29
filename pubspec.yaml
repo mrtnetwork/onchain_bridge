@@ -49,7 +49,7 @@ flutter:
       ios:
         pluginClass: OnChainBridge
       linux:
-        pluginClass: OnChainBridge
+        pluginClass: OnChainBridgePlugin
       macos:
         pluginClass: OnChainBridgePlugin
       windows:

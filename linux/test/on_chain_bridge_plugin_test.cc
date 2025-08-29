@@ -2,8 +2,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "include/on_chain_bridge/onchain_bridge_plugin.h"
-#include "onchain_bridge_plugin_private.h"
+#include "include/on_chain_bridge/on_chain_bridge_plugin.h"
+#include "on_chain_bridge_plugin_private.h"
 
 // This demonstrates a simple unit test of the C portion of this plugin's
 // implementation.
@@ -16,7 +16,7 @@
 namespace on_chain_bridge {
 namespace test {
 
-TEST(OnchainBridgePlugin, GetPlatformVersion) {
+TEST(OnChainBridgePlugin, GetPlatformVersion) {
   g_autoptr(FlMethodResponse) response = get_platform_version();
   ASSERT_NE(response, nullptr);
   ASSERT_TRUE(FL_IS_METHOD_SUCCESS_RESPONSE(response));

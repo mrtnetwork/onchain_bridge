@@ -26,32 +26,15 @@ abstract class OnChainBridgeInterface extends PlatformInterface {
 
   Future<bool> secureFlag({required bool isSecure});
 
-  // Future<String?> readSecure(String key);
-  // Future<List<String>> readKeys({String? prefix});
-  // Future<bool> writeSecure(String key, String value);
-  // Future<bool> containsKeySecure(String key);
-  // Future<Map<String, String>> readAllSecure({String? prefix});
-  // Future<Map<String, String>> readMultipleSecure(List<String> keys);
-  // Future<Map<String, String>> readMultipleSecureWithPrefix(
-  //     {String? prefix}) async {
-  //   if (prefix == null || prefix.isEmpty) return readAllSecure();
-  //   final keys = await readKeys(prefix: prefix);
-  //   return readMultipleSecure(keys);
-  // }
-
-  // Future<bool> removeMultipleSecure(List<String> keys);
-  // Future<bool> removeAllSecure({String? prefix});
-  // Future<bool> removeSecure(String key);
-
   Future<bool> share(Share share);
-  Future<AppPath> path();
+  Future<AppPath> path(String applicationId);
   Future<DeviceInfo> getDeviceInfo();
   Future<bool> launchUri(String uri);
   Future<Stream<BarcodeScannerResult>> startBarcodeScanner(
       {required BarcodeScannerParams param});
   Future<void> stopBarcodeScanner();
   Future<bool> hasBarcodeScanner();
-  Future<PlatformConfig> init();
+  Future<PlatformConfig> init(String applicationId);
   Future<String?> readClipboard();
   Future<bool> writeClipboard(String text);
   Stream<bool> get onNetworkStatus;
@@ -101,6 +84,7 @@ abstract class SpecificPlatfromMethods {
       WidgetOffset? position,
       WidgetSize? size,
       bool animate = false});
+  Future<bool> setPreventClose(bool preventClose);
 
   Future<bool> setFullScreen(bool isFullScreen);
   Future<bool> isFullScreen();

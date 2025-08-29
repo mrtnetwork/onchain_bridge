@@ -5,10 +5,13 @@ enum AppPlatform {
   web,
   android,
   ios,
-  macos;
+  macos,
+  linux;
 
   bool get isDesktop =>
-      this == AppPlatform.windows || this == AppPlatform.macos;
+      this == AppPlatform.windows ||
+      this == AppPlatform.macos ||
+      this == AppPlatform.linux;
 
   static AppPlatform fromName(String? name) {
     return values.firstWhere(

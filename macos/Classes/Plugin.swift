@@ -223,7 +223,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
                 windowManager.restore()
                 result(true)
                 break
-            case "setbounds":
+            case "setBounds":
                 windowManager.setBounds(args)
                 result(true)
                 break

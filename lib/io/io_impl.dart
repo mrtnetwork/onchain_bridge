@@ -13,9 +13,10 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   static const EventChannel _networkChannel = EventChannel(
       'com.mrtnetwork.on_chain_bridge.methodChannel/network_status');
   static MethodChannel get channel => _methodChannel;
-  final IDatabseInterfaceIo _database = IDatabseInterfaceIo();
+  IDatabseInterfaceIo? _database;
+  IDatabseInterfaceIo get db => _database!;
   IoPlatformInterface() {
-    if (Platform.isWindows || Platform.isMacOS) {
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       _desktop = DesktopPlatformInterface();
     }
     _methodChannel.setMethodCallHandler(_methodCallHandler);
@@ -28,9 +29,10 @@ class IoPlatformInterface extends OnChainBridgeInterface {
     } catch (e) {
       return;
     }
+    // print("method ${call.method}");
     switch (call.method) {
       case _IoPlatformConst.desktopEvent:
-        if (Platform.isWindows || Platform.isMacOS) {
+        if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
           _desktop._methodCallHandler(data);
         }
         break;
@@ -48,9 +50,8 @@ class IoPlatformInterface extends OnChainBridgeInterface {
 
   @override
   Future<bool> secureFlag({required bool isSecure}) async {
-    final secure = await channel.invokeMethod<bool>("secureFlag", {
-      'secure': isSecure,
-    });
+    final secure =
+        await channel.invokeMethod<bool>("secureFlag", {'secure': isSecure});
 
     return secure ?? false;
   }
@@ -70,7 +71,7 @@ class IoPlatformInterface extends OnChainBridgeInterface {
 
   // ios
   @override
-  Future<AppPath> path() async {
+  Future<AppPath> path(String applicationId) async {
     final data = await channel.invokeMethod(NativeMethodsConst.pathMethod, {});
     return AppPath.fromJson(Map<String, dynamic>.from(data));
   }
@@ -85,11 +86,11 @@ class IoPlatformInterface extends OnChainBridgeInterface {
 
   @override
   DesktopPlatformInterface get desktop {
-    if (Platform.isWindows || Platform.isMacOS) {
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       return _desktop;
     }
     throw const OnChainBridgeException(
-        "only available in desktop platforms (windows, macos)");
+        "only available on desktop platforms (windows, macos, linux)");
   }
 
   @override
@@ -124,15 +125,25 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   }
 
   @override
-  Future<PlatformConfig> init() async {
-    final db = await _database.openDatabase();
-    final barcode = await hasBarcodeScanner().catchError((e) => false);
-    return PlatformConfig(
-        platform: platform,
-        hasBarcodeScanner: barcode,
-        dbSupported: db.isReady,
-        supportWebView: Platform.isAndroid || Platform.isMacOS,
-        isExtension: false);
+  Future<PlatformConfig> init(String applicationId) async {
+    try {
+      _database ??= IDatabseInterfaceIo(appPath: await path(applicationId));
+      final db = await this.db.openDatabase();
+      final barcode = await hasBarcodeScanner().catchError((e) => false);
+      return PlatformConfig(
+          platform: platform,
+          hasBarcodeScanner: barcode,
+          dbSupported: db.isReady,
+          supportWebView: Platform.isAndroid || Platform.isMacOS,
+          isExtension: false);
+    } catch (e) {
+      return PlatformConfig(
+          platform: platform,
+          hasBarcodeScanner: false,
+          dbSupported: false,
+          supportWebView: Platform.isAndroid || Platform.isMacOS,
+          isExtension: false);
+    }
   }
 
   @override
@@ -146,6 +157,8 @@ class IoPlatformInterface extends OnChainBridgeInterface {
       return AppPlatform.windows;
     } else if (Platform.isMacOS) {
       return AppPlatform.macos;
+    } else if (Platform.isLinux) {
+      return AppPlatform.linux;
     }
     throw const OnChainBridgeException("Unknown platform.");
   }
@@ -180,37 +193,37 @@ class IoPlatformInterface extends OnChainBridgeInterface {
 
   @override
   Future<DATA?> readDb<DATA extends ITableData>(ITableRead<DATA> params) {
-    return _database.readDb(params);
+    return db.readDb(params);
   }
 
   @override
   Future<List<DATA>> readAllDb<DATA extends ITableData>(
       ITableRead<DATA> params) {
-    return _database.readAllDb(params);
+    return db.readAllDb(params);
   }
 
   @override
   Future<bool> removeDb(ITableRemove params) {
-    return _database.removeDb(params);
+    return db.removeDb(params);
   }
 
   @override
   Future<bool> writeDb(ITableInsertOrUpdate params) {
-    return _database.writeDb(params);
+    return db.writeDb(params);
   }
 
   @override
   Future<bool> writeAllDb(List<ITableInsertOrUpdate> params) {
-    return _database.writeAllDb(params);
+    return db.writeAllDb(params);
   }
 
   @override
   Future<bool> removeAllDb(List<ITableRemove> params) {
-    return _database.removeAllDb(params);
+    return db.removeAllDb(params);
   }
 
   @override
   Future<bool> dropDb(ITableDrop params) {
-    return _database.dropDb(params);
+    return db.dropDb(params);
   }
 }

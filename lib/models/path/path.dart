@@ -3,9 +3,11 @@ class AppPath {
       : document = json["document"],
         cache = json["cache"],
         support = json["support"];
-  final String document;
+  final String? document;
   final String cache;
   final String support;
+  const AppPath(
+      {required this.document, required this.cache, required this.support});
 
   @override
   String toString() {

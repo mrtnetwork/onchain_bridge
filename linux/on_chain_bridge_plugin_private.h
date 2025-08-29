@@ -1,6 +1,6 @@
 #include <flutter_linux/flutter_linux.h>
 
-#include "include/on_chain_bridge/onchain_bridge_plugin.h"
+#include "include/on_chain_bridge/on_chain_bridge_plugin.h"
 
 // This file exposes some plugin internals for unit testing. See
 // https://github.com/flutter/flutter/issues/88724 for current limitations

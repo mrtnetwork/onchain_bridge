@@ -20,7 +20,7 @@ class WebPlatformInterface extends OnChainBridgeInterface {
 
   @override
   Future<DeviceInfo> getDeviceInfo() {
-    throw OnChainBridgeException.unsuported;
+    throw DeviceInfo();
   }
 
   @override
@@ -59,7 +59,7 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   }
 
   @override
-  Future<AppPath> path() {
+  Future<AppPath> path(String applicationId) {
     throw OnChainBridgeException.unsuported;
   }
 
@@ -92,7 +92,8 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   // final _database = IDatabseInterfaceJS();
 
   @override
-  Future<PlatformConfig> init({bool upgradableDatebase = true}) async {
+  Future<PlatformConfig> init(String applicationId,
+      {bool upgradableDatebase = true}) async {
     database = IDatabseInterfaceJS(upgradable: upgradableDatebase);
     final open = await database.openDatabase();
     final barcode = await hasBarcodeScanner().catchError((e) => false);

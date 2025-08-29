@@ -8,14 +8,23 @@ class DeviceInfo {
         product = json["product"],
         appVersion = json["app_version"],
         androidSdkVersion = json["sdk_version"];
-  final String brand;
-  final String device;
+  final String? brand;
+  final String? device;
   final String? display;
   final String? id;
-  final String model;
+  final String? model;
   final String? product;
-  final String appVersion;
+  final String? appVersion;
   final int? androidSdkVersion;
+  const DeviceInfo(
+      {this.brand,
+      this.device,
+      this.display,
+      this.id,
+      this.model,
+      this.product,
+      this.appVersion,
+      this.androidSdkVersion});
 
   Map<String, dynamic> toJson() {
     return {

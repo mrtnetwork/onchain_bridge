@@ -11,4 +11,5 @@ class NativeMethodsConst {
   // windows
   static const String windowsManager = "windowsManager";
   static const String appDbName = "db_onchain";
+  static const String applicationId = "com.mrtnetwork";
 }
