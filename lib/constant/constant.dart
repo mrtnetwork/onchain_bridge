@@ -6,6 +6,8 @@ class NativeMethodsConst {
   static const String launchUriMethod = "lunch_uri";
   static const String pathMethod = "path";
   static const String shareMethod = "share";
+  static const String touchIdStatus = "touch_id_status";
+  static const String authenticate = "authenticate";
   static const String channelAuthory =
       'com.mrtnetwork.on_chain_bridge.methodChannel';
   // windows

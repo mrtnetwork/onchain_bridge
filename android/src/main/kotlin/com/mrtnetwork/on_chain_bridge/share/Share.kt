@@ -31,6 +31,8 @@ interface ShareImpl : OnChainCore {
                     result.error("-1", e.message, "")
                 }
             }
+            else -> result.error("INVALID_ARGUMENT", "Unknown method", "")
+
         }
     }
 

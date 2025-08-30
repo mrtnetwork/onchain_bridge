@@ -226,4 +226,25 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   Future<bool> dropDb(ITableDrop params) {
     return db.dropDb(params);
   }
+
+  @override
+  Future<TouchIdStatus> touchIdStatus() async {
+    final result = await channel.invokeMethod<String>(
+        NativeMethodsConst.authenticate,
+        {"type": NativeMethodsConst.touchIdStatus});
+    return TouchIdStatus.fromName(result);
+  }
+
+  @override
+  Future<BiometricResult> authenticate(String reason,
+      {String? title, String? buttonTitle}) async {
+    final result =
+        await channel.invokeMethod<String>(NativeMethodsConst.authenticate, {
+      "reason": reason,
+      "title": title,
+      "button_title": buttonTitle,
+      "type": NativeMethodsConst.authenticate
+    });
+    return BiometricResult.fromName(result);
+  }
 }

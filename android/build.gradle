@@ -2,7 +2,7 @@ group 'com.mrtnetwork.on_chain_bridge'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.0.20'
+    ext.kotlin_version = '2.2.10'
     repositories {
         google()
         mavenCentral()
@@ -29,7 +29,7 @@ apply plugin: 'kotlin-android'
 
 android {
     namespace "com.mrtnetwork.on_chain_bridge"
-    compileSdkVersion 34
+    compileSdkVersion 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -45,7 +45,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 23
     }
 }
 dependencies {
@@ -55,5 +55,6 @@ dependencies {
     implementation 'com.google.zxing:core:3.4.1'
     implementation 'androidx.activity:activity-ktx:1.9.0'
     implementation 'androidx.activity:activity-ktx:1.9.0'
+    implementation "androidx.biometric:biometric:1.1.0"
 
 }

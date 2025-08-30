@@ -1,10 +1,10 @@
 import Flutter
 import UIKit
 
-public class OnchainBridgePlugin: NSObject, FlutterPlugin {
+public class OnChainBridgePlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "on_chain_bridge", binaryMessenger: registrar.messenger())
-    let instance = OnchainBridgePlugin()
+    let instance = OnChainBridgePlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 

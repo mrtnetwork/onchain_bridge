@@ -39,6 +39,7 @@ interface EncryptionImpl : OnChainCore {
                     result.error("ERROR", e.message, "")
                 }
             }
+            else -> result.error("INVALID_ARGUMENT", "Unknown method", "")
         }
     }
 

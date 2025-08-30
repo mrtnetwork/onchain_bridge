@@ -15,7 +15,10 @@ abstract class AppEvent(val text: Any) {
 }
 
 
-interface OnChainCore {
+
+
+
+interface OnChainCore{
     companion object {
 
 
@@ -26,7 +29,7 @@ interface OnChainCore {
         }
 
         fun logging(message: String, TAG: String? = null) {
-          
+            Log.e("on_chain_wallet",message)
         }
 
         const val REQUEST_CODE_SCAN = 49374;

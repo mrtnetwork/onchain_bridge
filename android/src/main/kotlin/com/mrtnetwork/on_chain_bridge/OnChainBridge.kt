@@ -34,9 +34,6 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChanne
     }
 
     private fun handleIntent(intent: Intent) {
-        Log.d("DeepLink", "Received intent: ${intent}")
-        Log.d("DeepLink", "Action: ${intent.action}")
-        Log.d("DeepLink", "Data: ${intent.data}")
         if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             val uri = intent.data.toString()
             val event = AppNativeEvent(AppNativeEvent.EventType.DEEPLINK, uri)
@@ -133,7 +130,6 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChanne
             else -> super.onMethodCall(call, result)
 
         }
-
     }
 
 
@@ -162,7 +158,7 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChanne
     }
 
     @Suppress("DEPRECATION")
-    private fun appVersion(): String {
+    private fun appVersion(): String? {
         val packageManager = applicationContext.packageManager
         val appInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
         return appInfo.versionName

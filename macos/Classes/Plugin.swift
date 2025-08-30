@@ -6,6 +6,7 @@ import Cocoa
 import AVFoundation
 import CoreImage
 import SystemConfiguration
+import LocalAuthentication
 
 public protocol MethodHandler {
     func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult)
@@ -92,12 +93,44 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
+        case "authenticate":
+            guard let args =  call.arguments as? [String:Any],
+                  let type = args["type"] as? String else {
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Missing authenticate method type", details: nil))
+                return;//
+            }
+            switch type {
+            case "authenticate":
+                if let args = call.arguments as? [String: Any],
+                   let reason = args["reason"] as? String {
+                    let context = LAContext()
+                    let status = context.touchIDStatus()
+                    if status != .available {
+                        result(BiometricResult.notAvailable.rawValue)
+                        break
+                    }
+                    context.authenticate(reason: reason) { success in
+                        result(success.rawValue)
+                    }
+                } else {
+                    result(FlutterError(code: "INVALID_ARGUMENT", message: "Missing reason", details: nil))
+                }
+                break
+            case "touch_id_status":
+                let status = LAContext().touchIDStatus()
+                result(status.rawValue)
+                break
+            default:
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Unknown method", details: nil));
+                break
+            }
+           
         case "webView":
             handle(call, webview:result)
             break
         case "share":
             guard let args =  call.arguments as? [String:Any] else {
-                result(FlutterError(code: "invalid_arguments", message: "Invalid or missing key argument", details: nil))
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing share arguments", details: nil))
                 return;
             }
             let subject = args["subject"]as? String
@@ -134,7 +167,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
             break;
         case "startBarcodeScanner":
             guard let args =  call.arguments as? [String:Any] else {
-                result(FlutterError(code: "invalid_arguments", message: "Invalid or missing key argument", details: nil))
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing arguments", details: nil))
                 return;
             }
             self.barcodeScanner.checkCameraAccess { granted in
@@ -152,7 +185,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
         case "windowsManager":
             guard let args =  call.arguments as? [String:Any],
                   let type = args["type"] as? String else {
-                result(FlutterError(code: "invalid_arguments", message: "Invalid or missing key argument", details: nil))
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing windows method type.", details: nil))
                 return;
             }
             switch type {
@@ -258,7 +291,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
         case "secureStorage":
             guard let args =  call.arguments as? [String:Any],
                   let type = args["type"] as? String else {
-                result(FlutterError(code: "invalid_arguments", message: "Invalid or missing key argument", details: nil))
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing arguments", details: nil))
                 return;
             }
             switch type {
@@ -350,7 +383,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
         case "lunch_uri":
             guard let args =  call.arguments as? [String:Any],
                   let uri = args["uri"] as? String else {
-                result(FlutterError(code: "invalid_arguments", message: "Invalid or missing key argument", details: nil))
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Missing uri", details: nil))
                 return;
             }
             let res = openURL(uri)

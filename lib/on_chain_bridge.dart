@@ -5,6 +5,7 @@
 
 import 'dart:async';
 import 'package:on_chain_bridge/database/database.dart';
+import 'package:on_chain_bridge/models/biometric/types.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -47,6 +48,11 @@ abstract class OnChainBridgeInterface extends PlatformInterface {
   Future<bool> writeAllDb(List<ITableInsertOrUpdate> params);
   Future<bool> removeAllDb(List<ITableRemove> params);
   Future<bool> dropDb(ITableDrop params);
+
+  /// biometric
+  Future<TouchIdStatus> touchIdStatus();
+  Future<BiometricResult> authenticate(String reason,
+      {String? title, String? buttonTitle});
 }
 
 abstract class PlatformWebView {

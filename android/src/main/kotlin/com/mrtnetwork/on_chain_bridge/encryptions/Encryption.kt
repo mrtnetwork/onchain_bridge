@@ -448,7 +448,6 @@ class AppEncryption(private val enc: Encryption) {
             "aesEncryptEthFile" -> aesEncryptEthFileBinary(
                     mode, padding, key, iv, path!!, encryptPath!!, ethKeys!!, fullKey!!
             )
-
             "encryptFileToFile" -> encryptFileToFile(
                     mode,
                     padding,
@@ -458,7 +457,6 @@ class AppEncryption(private val enc: Encryption) {
                     encryptPath!!,
                     firstPadding!!
             )
-
             "aesDecryptFile" -> decryptFile(mode, padding, key, iv, encPath!!, decPath!!)
             "aesDecrypt" -> decrypt(mode, padding, key, iv, value!!)
             else -> null

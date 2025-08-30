@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'package:on_chain_bridge/database/models/table.dart';
 import 'package:on_chain_bridge/exception/exception.dart';
+import 'package:on_chain_bridge/models/biometric/types.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_bridge/on_chain_bridge.dart';
 import 'package:on_chain_bridge/web/api/api.dart';
@@ -180,5 +181,17 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   @override
   Future<bool> dropDb(ITableDrop params) {
     return database.dropDb(params);
+  }
+
+  @override
+  Future<TouchIdStatus> touchIdStatus() {
+    // TODO: implement touchIdStatus
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<BiometricResult> authenticate(String reason,
+      {String? title, String? buttonTitle}) {
+    throw UnimplementedError();
   }
 }
