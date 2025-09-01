@@ -92,7 +92,10 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "valarray": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "coroutine": "cpp",
+        "filesystem": "cpp",
+        "source_location": "cpp"
     },
     "git.confirmSync": false,
     "git.enableStatusBarSync": false,

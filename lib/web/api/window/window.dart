@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
 import 'package:on_chain_bridge/web/api/chrome/chrome.dart';
+import 'package:on_chain_bridge/web/api/web_auth/types.dart';
 
 import 'html.dart';
 import 'media_stream.dart';
@@ -150,6 +151,7 @@ extension type JSNavigator._(JSObject _) implements JSObject {
   external MediaDevices get mediaDevices;
   external String? get userAgent;
   external bool get onLine;
+  external CredentialsContainer? get credentials;
   bool get isWebKit => userAgent?.contains("AppleWebKit") ?? false;
   bool get isFirefoxMobile {
     final ua = userAgent?.toLowerCase();

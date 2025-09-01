@@ -3,6 +3,7 @@ library;
 export 'api/api.dart';
 export 'wallet/event.dart';
 export 'storage/storage.dart';
+export 'api/web_auth/types.dart';
 import 'dart:async';
 import 'dart:js_interop';
 import 'package:on_chain_bridge/database/models/table.dart';

@@ -5,6 +5,7 @@ import 'package:on_chain_bridge/base.dart'
     if (dart.library.io) 'io/io_platforms.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'on_chain_bridge.dart';
+export 'models/models.dart';
 
 class PlatformInterface {
   static final OnChainBridgeInterface instance = getPlatformInterface();
