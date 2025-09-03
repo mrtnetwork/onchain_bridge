@@ -6,7 +6,8 @@ class _IoPlatformConst {
   static const String barcodeScannerEvent = "onBarcodeScanned";
 }
 
-class IoPlatformInterface extends OnChainBridgeInterface {
+class IoPlatformInterface extends OnChainBridgeInterface<
+    PlatformCredentialIoResponse, PlatformCredentialAutneticateIoRequest> {
   static const MethodChannel _methodChannel =
       MethodChannel(NativeMethodsConst.channelAuthory);
   StreamController<BarcodeScannerResult>? _barcodeListener;
@@ -236,15 +237,32 @@ class IoPlatformInterface extends OnChainBridgeInterface {
   }
 
   @override
-  Future<BiometricResult> authenticate(String reason,
-      {String? title, String? buttonTitle}) async {
+  Future<BiometricResult> authenticate(
+      PlatformCredentialAutneticateIoRequest request) async {
     final result =
         await channel.invokeMethod<String>(NativeMethodsConst.authenticate, {
-      "reason": reason,
-      "title": title,
-      "button_title": buttonTitle,
+      "reason": request.reason,
+      "title": request.title,
+      "button_title": request.buttonTitle,
       "type": NativeMethodsConst.authenticate
     });
-    return BiometricResult.fromName(result);
+    return request.verify(BiometricResult.fromName(result));
+  }
+
+  @override
+  Future<PlatformCredentialIoResponse?> createPlatformCredential(
+      PlatformCredentialRequest params) async {
+    final result =
+        await channel.invokeMethod<String>(NativeMethodsConst.authenticate, {
+      "reason": params.reason,
+      "title": params.title,
+      "button_title": params.buttonTitle,
+      "type": NativeMethodsConst.authenticate
+    });
+    final status = BiometricResult.fromName(result);
+    if (status == BiometricResult.success) {
+      return PlatformCredentialIoResponse();
+    }
+    return null;
   }
 }

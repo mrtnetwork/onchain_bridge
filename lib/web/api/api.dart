@@ -5,3 +5,4 @@ export 'window/window.dart';
 export 'window/websocket.dart';
 export 'window/html.dart';
 export 'core/js.dart';
+export 'web_auth/types.dart';

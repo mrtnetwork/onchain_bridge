@@ -9,7 +9,10 @@ import 'package:on_chain_bridge/models/biometric/types.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-abstract class OnChainBridgeInterface extends PlatformInterface {
+abstract class OnChainBridgeInterface<
+        CREDENTIALRESPONSE extends PlatformCredentialResponse,
+        CREDENTIALAUTHREQUEST extends PlatformCredentialAutneticateRequest>
+    extends PlatformInterface {
   OnChainBridgeInterface() : super(token: _token);
   static final Object _token = Object();
   abstract final SpecificPlatfromMethods desktop;
@@ -51,8 +54,10 @@ abstract class OnChainBridgeInterface extends PlatformInterface {
 
   /// biometric
   Future<TouchIdStatus> touchIdStatus();
-  Future<BiometricResult> authenticate(String reason,
-      {String? title, String? buttonTitle});
+  Future<BiometricResult> authenticate(CREDENTIALAUTHREQUEST request);
+
+  Future<CREDENTIALRESPONSE?> createPlatformCredential(
+      PlatformCredentialRequest params);
 }
 
 abstract class PlatformWebView {

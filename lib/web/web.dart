@@ -3,9 +3,9 @@ library;
 export 'api/api.dart';
 export 'wallet/event.dart';
 export 'storage/storage.dart';
-export 'api/web_auth/types.dart';
 import 'dart:async';
 import 'dart:js_interop';
+import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:on_chain_bridge/database/models/table.dart';
 import 'package:on_chain_bridge/exception/exception.dart';
 import 'package:on_chain_bridge/models/biometric/types.dart';
@@ -16,7 +16,8 @@ import 'package:on_chain_bridge/web/storage/database/interface/interface.dart';
 
 OnChainBridgeInterface getPlatformInterface() => WebPlatformInterface._();
 
-class WebPlatformInterface extends OnChainBridgeInterface {
+class WebPlatformInterface extends OnChainBridgeInterface<
+    PlatformCredentialWebResponse, PlatformCredentialAutneticateWebRequest> {
   WebPlatformInterface._();
   late final IDatabseInterfaceJS database;
 
@@ -185,14 +186,46 @@ class WebPlatformInterface extends OnChainBridgeInterface {
   }
 
   @override
-  Future<TouchIdStatus> touchIdStatus() {
-    // TODO: implement touchIdStatus
-    throw UnimplementedError();
+  Future<TouchIdStatus> touchIdStatus() async {
+    final cred = jsWindow.navigator.credentials;
+    if (cred == null) return TouchIdStatus.notAvailable;
+    final platformAuth = await PublicKeyCredential
+        .isUserVerifyingPlatformAuthenticatorAvailable_();
+    if (platformAuth) return TouchIdStatus.available;
+    return TouchIdStatus.notAvailable;
   }
 
   @override
-  Future<BiometricResult> authenticate(String reason,
-      {String? title, String? buttonTitle}) {
-    throw UnimplementedError();
+  Future<BiometricResult> authenticate(
+      PlatformCredentialAutneticateWebRequest request) async {
+    final credential = jsWindow.navigator.credentials;
+    if (credential == null) return BiometricResult.notAvailable;
+    final response =
+        await credential.get_(id: request.id, challenge: request.challange);
+    if (response == null) return BiometricResult.failed;
+    return request.verify(
+      InternalPublicKeyWebAuthResponse(
+          authenticatorData:
+              response.response.authenticatorData.toDart.asUint8List(),
+          clientDataJSON: response.response.clientDataJSON.toDart.asUint8List(),
+          signature: response.response.signature.toDart.asUint8List()),
+    );
+  }
+
+  @override
+  Future<PlatformCredentialWebResponse?> createPlatformCredential(
+      PlatformCredentialRequest params) async {
+    final credential = jsWindow.navigator.credentials;
+    if (credential == null) return null;
+    final id = await credential.create_(
+        rpName: params.appName,
+        name: params.name,
+        displayName: params.displayName,
+        id: params.accountId);
+    if (id == null) return null;
+    return PlatformCredentialWebResponse(
+        id: id.id.toDart,
+        publicKey: BytesUtils.toHexString(
+            id.response.getPublicKey().toDart.asUint8List()));
   }
 }
