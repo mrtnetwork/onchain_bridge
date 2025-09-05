@@ -1,9 +1,6 @@
 import 'dart:js_interop';
 import 'dart:typed_data';
-
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:blockchain_utils/crypto/quick_crypto.dart';
-import 'package:on_chain_bridge/web/api/chrome/api/core.dart';
 import 'package:on_chain_bridge/web/api/window/window.dart';
 
 class _WebAuthConstants {
@@ -125,8 +122,7 @@ extension type CredentialsContainer._(JSObject _) implements JSAny {
       required String displayName,
       required List<int> id,
       String? rpId}) async {
-    rpId ??= isExtension ? extension.runtime.id : jsWindow.location.hostName;
-
+    rpId ??= jsWindow.location.hostName;
     final auth = await create(
       CreateCredentialsParams(
         publicKey: PublicKeyCredentialCreationOptions(

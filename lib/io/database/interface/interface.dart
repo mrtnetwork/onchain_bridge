@@ -37,7 +37,6 @@ class IDatabseInterfaceIo extends IDatabseInterface<IDatabaseIo> {
 
   Future<String> _getDbUrl(String dbName) async {
     final path = await _dbPath();
-    print("db path $path");
     Directory(path).createSync(recursive: true);
     return _joinPathWithRoot([path, "$dbName.db"]);
   }

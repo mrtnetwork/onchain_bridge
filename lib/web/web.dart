@@ -187,6 +187,7 @@ class WebPlatformInterface extends OnChainBridgeInterface<
 
   @override
   Future<TouchIdStatus> touchIdStatus() async {
+    if (isExtension) return TouchIdStatus.notAvailable;
     final cred = jsWindow.navigator.credentials;
     if (cred == null) return TouchIdStatus.notAvailable;
     final platformAuth = await PublicKeyCredential

@@ -106,7 +106,6 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
       'height': bounds?.height ?? size?.height,
       'animate': animate,
     }..removeWhere((key, value) => value == null);
-    print("Arguments $arguments");
     await IoPlatformInterface.channel
         .invokeMethod(NativeMethodsConst.windowsManager, arguments);
   }
