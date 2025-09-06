@@ -45,7 +45,8 @@ interface Authenticate : OnChainCore {
     fun getBiometricStatus(): BiometricStatus {
         val biometricManager = BiometricManager.from(applicationContext)
         return when (biometricManager.canAuthenticate(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG
+            BiometricManager.Authenticators.BIOMETRIC_STRONG || 
+            BiometricManager.Authenticators.BIOMETRIC_WEAK
         )) {
             BiometricManager.BIOMETRIC_SUCCESS -> BiometricStatus.AVAILABLE
 
@@ -74,7 +75,8 @@ interface Authenticate : OnChainCore {
             .setSubtitle(reason)
             .setNegativeButtonText(buttonTitle?: "Cancel")
             .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG
+                BiometricManager.Authenticators.BIOMETRIC_STRONG || 
+                BiometricManager.Authenticators.BIOMETRIC_WEAK
             )
             .build()
 
