@@ -33,7 +33,7 @@ extension OnChainBridgePlugin {
     
     public func handle(_ call: FlutterMethodCall,webview result: @escaping FlutterResult){
         guard let args =  call.arguments as? [String:Any],let type = args["type"] as? String else {
-            result(FlutterError(code: "invalid_arguments", message: "Invalid or missing key argument", details: nil))
+            result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message:nil, details: nil))
             return;
         }
         switch type {
@@ -42,13 +42,13 @@ extension OnChainBridgePlugin {
             break
         default:
             guard let factory = WebViewMethods.getWebView(args: args) else{
-                result(FlutterError(code: "invalid_arguments", message: "webView factory not found", details: nil))
+                result(FlutterError(code: OnChainBridgePluginConst.internalError, message: "webView factory not found", details: nil))
                 return
             }
             switch type {
             case WebViewConst.openPage:
                 guard let url = args["url"] as? String else {
-                    result(FlutterError(code: "invalid_arguments", message: "url missing", details: nil))
+                    result(FlutterError(code:OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                     return;
                 }
                 factory.openPage(url: url)
@@ -56,7 +56,7 @@ extension OnChainBridgePlugin {
                 break
             case WebViewConst.addInterface:
                 guard let name = args["name"] as? String else {
-                    result(FlutterError(code: "invalid_arguments", message: "interface name missing", details: nil))
+                    result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                     return;
                 }
                 factory.addJsInterface(name: name)
@@ -64,7 +64,7 @@ extension OnChainBridgePlugin {
                 break
             case WebViewConst.removeInterface:
                 guard let name = args["name"] as? String else {
-                    result(FlutterError(code: "invalid_arguments", message: "interface name missing", details: nil))
+                    result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                     return;
                 }
                 factory.removeJsInterface(name: name)
@@ -96,7 +96,7 @@ extension OnChainBridgePlugin {
             case WebViewConst.updateFrame:
                 guard let width = args["width"] as? CGFloat,
                       let height = args["height"] as? CGFloat else {
-                    result(FlutterError(code: "invalid_arguments", message: "width or height missing or invalid", details: nil))
+                    result(FlutterError(code:OnChainBridgePluginConst.invalidArguments, message:nil, details: nil))
                     return
                 }
                 factory.updateFrameSize(width: width, height: height)
@@ -104,18 +104,18 @@ extension OnChainBridgePlugin {
                 break
             case WebViewConst.injectJavaScript:
                 guard let script = args["script"] as? String else {
-                    result(FlutterError(code: "invalid_arguments", message: "script missing", details: nil))
+                    result(FlutterError(code:OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                     return;
                 }
                 factory.injectJavaScript(jsCode: script, completion: { r in
                     result(r)
                 }, error: { errorMessage in
-                    result(FlutterError(code: "runtime", message: errorMessage, details: nil))
+                    result(FlutterError(code:OnChainBridgePluginConst.internalError, message: errorMessage, details: nil))
                 })
                 
                 
             default:
-                result(FlutterError(code: "invalid_arguments", message: "method not found.", details: nil))
+                result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                 break
                 
             }

@@ -6,6 +6,7 @@ export 'storage/storage.dart';
 import 'dart:async';
 import 'dart:js_interop';
 import 'package:blockchain_utils/utils/binary/utils.dart';
+import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:on_chain_bridge/database/models/table.dart';
 import 'package:on_chain_bridge/exception/exception.dart';
 import 'package:on_chain_bridge/models/biometric/types.dart';
@@ -228,5 +229,46 @@ class WebPlatformInterface extends OnChainBridgeInterface<
         id: id.id.toDart,
         publicKey: BytesUtils.toHexString(
             id.response.getPublicKey().toDart.asUint8List()));
+  }
+
+  @override
+  Future<PickedFileContent?> pickAndReadFileContent(
+      {PickFileContentEncoding encoding = PickFileContentEncoding.hex,
+      AppFileType? type = AppFileType.txt}) async {
+    final file = await jsWindow.document
+        .readFileContent([if (type != null) type.extension]);
+    if (file == null) return null;
+    List<int> data;
+    try {
+      switch (encoding) {
+        case PickFileContentEncoding.bytes:
+          data = await file.toBytes();
+          break;
+        case PickFileContentEncoding.utf8:
+          data = StringUtils.encode(await file.toText());
+          break;
+        case PickFileContentEncoding.hex:
+          data = BytesUtils.fromHexString(await file.toText());
+          break;
+      }
+    } catch (e) {
+      throw OnChainBridgeException.invalidFileData;
+    }
+
+    return PickedFileContent(name: file.name, data: data, path: null);
+  }
+
+  @override
+  Future<bool> saveFile(
+      {required String filePath,
+      required String fileName,
+      String? title,
+      AppFileType type = AppFileType.txt}) async {
+    if (!fileName.contains(".")) {
+      fileName = "$fileName.${type.extension}";
+    }
+    jsWindow.document.downloadFile(
+        fileBytes: StringUtils.encode(filePath), fileName: fileName);
+    return true;
   }
 }

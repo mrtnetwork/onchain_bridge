@@ -1,13 +1,13 @@
 package com.mrtnetwork.on_chain_bridge.encryptions
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
 import android.util.Base64
-import androidx.annotation.RequiresApi
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import androidx.core.content.edit
 
 class InvokeException(message: Exception) : Exception(message)
 abstract class BaseEncryption(val sharedPreferences: SharedPreferences) {
@@ -28,17 +28,17 @@ class OwnEncryption(
         private val charset: Charset, private val aes: SecureAesImpl, sharedPreferences: SharedPreferences
 ) : BaseEncryption(sharedPreferences) {
     companion object {
-        private const val PEREFIX: String = "SECURE_"
+        private const val PREFIX: String = "SECURE_"
         private fun combineKeys(key: String): String {
-            return "$PEREFIX${key}"
+            return "$PREFIX${key}"
         }
 
         private fun isUserDataKey(key: String): Boolean {
-            return key.startsWith(PEREFIX)
+            return key.startsWith(PREFIX)
         }
 
         private fun toUserKey(key: String): String {
-            return key.replaceFirst(PEREFIX, "")
+            return key.replaceFirst(PREFIX, "")
         }
     }
 
@@ -48,11 +48,11 @@ class OwnEncryption(
     }
 
     override fun write(key: String, value: String): Boolean {
-        val editor: SharedPreferences.Editor = sharedPreferences.edit()
-        val result: ByteArray = aes.encrypt(value.toByteArray(charset))
-        val correctKey: String = combineKeys(key)
-        editor.putString(correctKey, Base64.encodeToString(result, 0))
-        editor.apply()
+        sharedPreferences.edit {
+            val result: ByteArray = aes.encrypt(value.toByteArray(charset))
+            val correctKey: String = combineKeys(key)
+            putString(correctKey, Base64.encodeToString(result, 0))
+        }
         return true
     }
 
@@ -64,9 +64,9 @@ class OwnEncryption(
 
     override fun remove(key: String): Boolean {
         val correctKey: String = combineKeys(key)
-        val editor: SharedPreferences.Editor = sharedPreferences.edit()
-        editor.remove(correctKey)
-        editor.apply()
+        sharedPreferences.edit {
+            remove(correctKey)
+        }
         return true
     }
 
@@ -84,13 +84,14 @@ class OwnEncryption(
         return decyptedData
     }
 
+    @SuppressLint("UseKtx")
     override fun deleteMultiple(key: ArrayList<String>): Boolean {
-        val editor: SharedPreferences.Editor = sharedPreferences.edit()
-        for (foo in key) {
-            val correctKey: String = combineKeys(foo)
-            editor.remove(correctKey)
+        sharedPreferences.edit {
+            for (foo in key) {
+                val correctKey: String = combineKeys(foo)
+                remove(correctKey)
+            }
         }
-        editor.apply()
         return true
     }
 
@@ -109,7 +110,7 @@ class OwnEncryption(
             sharedPreferences.all as HashMap<String, Any?>
         val k = combineKeys(key = prefix?:"")
         val result: ArrayList<String> = arrayListOf()
-        for ((key, value) in encryptedData) {
+        for ((key, _) in encryptedData) {
             if (!isUserDataKey(key)) continue
             if(key.startsWith(k)){
                 val currentKey: String = toUserKey(key)
@@ -186,12 +187,10 @@ class Encryption(private val baseEncryption: BaseEncryption) {
 
     companion object {
 
-        @RequiresApi(Build.VERSION_CODES.KITKAT)
         private fun getCurrentCharset(): Charset {
             return StandardCharsets.UTF_8
         }
 
-        @RequiresApi(Build.VERSION_CODES.KITKAT)
         private fun getPreference(
                 context: Context,
                 prefKey: String,
@@ -209,15 +208,12 @@ class Encryption(private val baseEncryption: BaseEncryption) {
             return OwnEncryption(charset, aes, pref)
         }
 
-        @RequiresApi(Build.VERSION_CODES.KITKAT)
         fun create(context: Context, prefKey: String, alias: String? = null) = object {
-            @RequiresApi(Build.VERSION_CODES.KITKAT)
             val pref: BaseEncryption = getPreference(
                     context,
                     prefKey,
                     alias
             )
-            @RequiresApi(Build.VERSION_CODES.KITKAT)
             val enc = Encryption(pref)
 
         }.enc
@@ -228,9 +224,7 @@ class Encryption(private val baseEncryption: BaseEncryption) {
 class AppEncryption(private val enc: Encryption) {
     companion object {
 
-        @RequiresApi(Build.VERSION_CODES.KITKAT)
         fun init(context: Context) = object {
-            @RequiresApi(Build.VERSION_CODES.KITKAT)
             val enc: AppEncryption =
                     AppEncryption(
                             Encryption.create(
@@ -411,7 +405,7 @@ class AppEncryption(private val enc: Encryption) {
         val method: String = arguments["type"] as String
         val key: String? = arguments["key"] as String?
         val value: String? = arguments["value"] as String?
-        val keys: ArrayList<String>? = arguments["keys"] as ArrayList<String>?
+        @Suppress("UNCHECKED_CAST") val keys: ArrayList<String>? = arguments["keys"] as ArrayList<String>?
         return when (method) {
             "containsKey" -> enc.containsKey(key!!)
             "write" -> enc.write(key!!, value!!)

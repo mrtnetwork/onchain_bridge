@@ -27,7 +27,7 @@ interface EncryptionImpl : OnChainCore {
                     val encResult = encryption.handleEncryption(args)
                     result.success(encResult)
                 } catch (e: Exception) {
-                    result.error("-1", e.message, "")
+                    result.error(OnChainCore.INTERNAL_ERROR, e.message, null)
                 }
             }
 
@@ -36,10 +36,10 @@ interface EncryptionImpl : OnChainCore {
                     val res = encryption.handleStorage(args)
                     result.success(res)
                 } catch (e: Exception) {
-                    result.error("ERROR", e.message, "")
+                    result.error(OnChainCore.INTERNAL_ERROR, e.message, null)
                 }
             }
-            else -> result.error("INVALID_ARGUMENT", "Unknown method", "")
+            else -> result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
         }
     }
 

@@ -1,8 +1,10 @@
 import 'dart:js_interop';
+import 'package:on_chain_bridge/web/api/window/window.dart';
+
 import 'media_stream.dart';
 
 @JS("Node")
-extension type JSNode._(JSObject _) implements JSObject {
+extension type JSNode._(JSObject _) implements WebEventStream {
   external factory JSNode();
   @JS("appendChild")
   external void appendChild(HTMLElement aChild);
@@ -44,7 +46,7 @@ extension type HTMLAnchorElement._(JSObject _) implements HTMLElement {
   external set download(String? download);
 }
 
-@JS("HTMLVideoElement")
+@JS()
 extension type HTMLVideoElement._(JSObject _) implements HTMLMediaElement {
   external factory HTMLVideoElement();
   external MediaStream? get srcObject;
@@ -58,4 +60,16 @@ extension type HTMLVideoElement._(JSObject _) implements HTMLMediaElement {
 
   external int? get width;
   external set width(int? width);
+}
+@JS()
+extension type HTMLInputElement._(JSObject _) implements HTMLElement {
+  external factory HTMLInputElement();
+  external String? get accept;
+  external set accept(String? accept);
+  external String? get type;
+  external set type(String? type);
+  external set onchange(JSFunction? _);
+  external set onerror(JSFunction? _);
+  external set oncancel(JSFunction? _);
+  external FileList? get files;
 }

@@ -24,14 +24,14 @@ interface WebViewInterface : OnChainCore {
             else -> {
                 val webViewFactory = WebViewHandlers.getWebView(args)
                 if (webViewFactory == null) {
-                    result.error("-1", "webView factory not found", null)
+                    result.error(OnChainCore.INTERNAL_ERROR, "webView factory not found", null)
                     return
                 }
                 when (type) {
                     WebViewConst.openPage -> {
                         val url: String? = args["url"] as String?
                         if (url == null) {
-                            result.error("-1", "url missing", null)
+                            result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
                             return
                         }
                         webViewFactory.openPage(url);
@@ -41,7 +41,7 @@ interface WebViewInterface : OnChainCore {
                     WebViewConst.addInterface -> {
                         val name: String? = args["name"] as String?
                         if (name == null) {
-                            result.error("-1", "interface name missing", null)
+                            result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
                             return
                         }
                         webViewFactory.addJsInterface(name)
@@ -54,7 +54,7 @@ interface WebViewInterface : OnChainCore {
                     WebViewConst.removeInterface -> {
                         val name: String? = args["name"] as String?
                         if (name == null) {
-                            result.error("-1", "interface name missing", null)
+                            result.error(OnChainCore.INVALID_ARGUMENTS,null , null)
                             return
                         }
                         webViewFactory.removeJsInterface(name)
@@ -62,11 +62,11 @@ interface WebViewInterface : OnChainCore {
                     }
 
                     WebViewConst.canGoForward -> {
-                        result.success(webViewFactory.canGoForward() ?: false)
+                        result.success(webViewFactory.canGoForward())
                     }
 
                     WebViewConst.canGoBack -> {
-                        result.success(webViewFactory.canGoBack() ?: false)
+                        result.success(webViewFactory.canGoBack())
                     }
 
                     WebViewConst.goBack -> {
@@ -90,7 +90,7 @@ interface WebViewInterface : OnChainCore {
                     WebViewConst.injectJavaScript -> {
                         val script: String? = args["script"] as String?
                         if (script == null) {
-                            result.error("-1", "script missing", null)
+                            result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
                             return
                         }
                         webViewFactory.injectJavaScript(script, object : Callback<String?> {
@@ -99,7 +99,7 @@ interface WebViewInterface : OnChainCore {
                             }
 
                             override fun onFailure(message: String) {
-                                result.error("-1", message, null)
+                                result.error(OnChainCore.INTERNAL_ERROR, message, null)
                             }
 
                         })

@@ -9,11 +9,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 
-abstract class AppEvent(val text: Any) {
-
-    abstract fun toJson(): HashMap<String, Any?>
-}
-
 
 
 
@@ -22,21 +17,20 @@ interface OnChainCore{
     companion object {
 
 
-        val liveData = MutableLiveData<Any>()
 
-        fun updateLiveData(notification: Any) {
-            liveData.postValue(notification)
-        }
-
-        fun logging(message: String, TAG: String? = null) {
+        fun logging(message: String, tag: String? = null) {
             Log.e("on_chain_wallet",message)
         }
-
+        const val REQUEST_CODE_PICK_FILE = 1001
+        const val REQUEST_CODE_PICK_DIRECTORY = 2001
         const val REQUEST_CODE_SCAN = 49374;
         const val BARCODE_SUCCESS_TYPE = "success"
         const val BARCODE_SUCCESS_ERROR = "error"
         const val BARCODE_SUCCESS_CANCEL = "cancel"
         const val BARCODE_CHANNEL_RESPONSE_EVENT = "onBarcodeScanned"
+
+        const val INVALID_ARGUMENTS = "INVALID_ARGUMENTS"
+        const val INTERNAL_ERROR = "INTERNAL_ERROR"
 
         @Suppress("UNCHECKED_CAST")
         fun getMapArguments(call: MethodCall, result: MethodChannel.Result): Map<String, Any?>? {
@@ -61,6 +55,7 @@ interface OnChainCore{
     var mainActivity: Activity?
     var applicationContext: Context
     var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding?
+    fun getCachePath(): String;
 
 }
 

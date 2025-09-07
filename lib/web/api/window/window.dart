@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
+import 'package:on_chain_bridge/exception/exception.dart';
 import 'package:on_chain_bridge/web/api/chrome/chrome.dart';
 import 'package:on_chain_bridge/web/api/web_auth/types.dart';
 
@@ -117,6 +118,50 @@ extension type Document._(JSObject _) implements JSObject, WebEventStream {
     anchor.click();
     jsWindow.document.body.removeChild(anchor);
     return url;
+  }
+
+  Future<JSFile?> readFileContent(List<String> extensions) async {
+    Completer<JSFile?>? completer = Completer();
+    final HTMLInputElement anchor = createElement("input");
+    void compelete(JSFile? data) {
+      completer?.complete(data);
+      completer = null;
+    }
+
+    void error() {
+      completer?.completeError(OnChainBridgeException.failedToReadFileContent);
+      completer = null;
+    }
+
+    anchor.onchange = () {
+      final files = anchor.files;
+      if (files == null || files.length != 1) {
+        compelete(null);
+        return;
+      }
+      final file = files.item(0);
+      compelete(file);
+    }.toJS;
+    anchor.onerror = () {
+      compelete(null);
+      error();
+    }.toJS;
+    anchor.oncancel = () {
+      compelete(null);
+    }.toJS;
+    anchor.accept = extensions.isEmpty
+        ? "*/*"
+        : extensions.map((e) {
+            if (e.contains("/")) return e;
+            if (!e.startsWith(".")) return ".$e";
+            return e;
+          }).join(",");
+    anchor.type = "file";
+    jsWindow.document.body.appendChild(anchor);
+    anchor.click();
+    jsWindow.document.body.removeChild(anchor);
+    final data = await completer?.future;
+    return data;
   }
 }
 @JS("Clipboard")
@@ -280,8 +325,27 @@ extension type JSFile._(JSObject _) implements JSObject {
   external JSFile(
       JSArray<JSArrayBuffer> fileBits, String fileName, JSFileOption? options);
   external JSArray<JSArrayBuffer>? get fileBits;
-  external String? get fileName;
+  // external String? get fileName;
+  external String get name;
   external JSFileOption? get options;
+  external JSPromise<JSArrayBuffer> arrayBuffer();
+  external JSPromise<JSString> text();
+
+  Future<List<int>> toBytes() async {
+    final bytes = await arrayBuffer().toDart;
+    return bytes.toDart.asUint8List().toList();
+  }
+
+  Future<String> toText() async {
+    final bytes = await text().toDart;
+    return bytes.toDart;
+  }
+}
+@JS("FileList")
+extension type FileList._(JSObject _) implements JSObject {
+  external FileList();
+  external int get length;
+  external JSFile item(int index);
 }
 
 @JS("Blob")

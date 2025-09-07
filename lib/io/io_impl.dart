@@ -265,4 +265,52 @@ class IoPlatformInterface extends OnChainBridgeInterface<
     }
     return null;
   }
+
+  @override
+  Future<PickedFileContent?> pickAndReadFileContent(
+      {PickFileContentEncoding encoding = PickFileContentEncoding.hex,
+      AppFileType? type = AppFileType.txt}) async {
+    final result = await channel.invokeMethod<String?>(
+        NativeMethodsConst.pickFile,
+        {"extension": type?.extension, "mime_type": type?.mimeType});
+    if (result == null) return null;
+    final file = File(result);
+    if (!file.existsSync()) return null;
+    final name = file.path.split("/").last;
+    List<int> data;
+    try {
+      switch (encoding) {
+        case PickFileContentEncoding.bytes:
+          data = file.readAsBytesSync();
+          break;
+        case PickFileContentEncoding.utf8:
+          data = StringUtils.encode(file.readAsStringSync());
+          break;
+        case PickFileContentEncoding.hex:
+          data = BytesUtils.fromHexString(file.readAsStringSync());
+          break;
+      }
+    } catch (e) {
+      throw OnChainBridgeException.invalidFileData;
+    }
+
+    return PickedFileContent(name: name, data: data, path: result);
+  }
+
+  @override
+  Future<bool> saveFile(
+      {required String filePath,
+      required String fileName,
+      String? title,
+      AppFileType type = AppFileType.txt}) async {
+    final result =
+        await channel.invokeMethod<bool>(NativeMethodsConst.saveFile, {
+      "file_path": filePath,
+      "file_name": fileName,
+      "extension": type.extension,
+      "mime_type": type.mimeType,
+      "title": title
+    });
+    return result ?? false;
+  }
 }

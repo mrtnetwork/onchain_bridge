@@ -3,11 +3,9 @@ package com.mrtnetwork.on_chain_bridge
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
 import com.mrtnetwork.on_chain_bridge.encryptions.EncryptionImpl
-import com.mrtnetwork.on_chain_bridge.webview.WebViewFactory
 import com.mrtnetwork.on_chain_bridge.types.AppNativeEvent
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -19,7 +17,7 @@ import io.flutter.plugin.common.EventChannel
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.content.IntentFilter
-import android.util.Log
+import androidx.core.net.toUri
 
 class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChannel.StreamHandler, PluginService() {
     override lateinit var methodChannel: MethodChannel
@@ -106,18 +104,18 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChanne
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
-
-            "logging" -> {
-            }
-
             "secureFlag" -> {
                 val args: Map<String, Any?> = OnChainCore.getMapArguments(call, result) ?: return
                 try {
-                    val secure = args["secure"] as Boolean
+                    val secure = args["secure"] as Boolean?
+                    if(secure==null){
+                        result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
+                        return
+                    }
                     val isSecure = secureApplication(secure)
                     result.success(isSecure)
                 } catch (e: Exception) {
-                    result.error("secureFlag", e.message, "")
+                    result.error(OnChainCore.INTERNAL_ERROR, e.message, null)
                 }
             }
 
@@ -125,7 +123,12 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChanne
             "info" -> result.success(deviceInfo())
             "lunch_uri" -> {
                 val args: Map<String, Any?> = OnChainCore.getMapArguments(call, result) ?: return
-                result.success(lunchUrl(args["uri"] as String?))
+                val url = args["uri"] as String?
+                if(url==null){
+                    result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
+                    return
+                }
+                result.success(lunchUrl(url))
             }
             else -> super.onMethodCall(call, result)
 
@@ -146,10 +149,10 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChanne
     }
 
 
-    private fun lunchUrl(uri: String?): Boolean {
+    private fun lunchUrl(uri: String): Boolean {
         try {
 
-            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+            val browserIntent = Intent(Intent.ACTION_VIEW, uri.toUri())
             mainActivity!!.startActivity(browserIntent)
             return true
         } catch (e: Exception) {
@@ -185,6 +188,10 @@ class OnChainBridge : FlutterPlugin, MethodChannel.MethodCallHandler,EventChanne
         info["cache"] = applicationContext.cacheDir.path
         info["support"] = PathUtils.getFilesDir(applicationContext)
         return info
+    }
+
+     override fun getCachePath(): String {
+        return applicationContext.cacheDir.path
     }
 
 

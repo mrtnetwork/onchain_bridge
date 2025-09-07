@@ -2,10 +2,8 @@ package com.mrtnetwork.on_chain_bridge.encryptions
 
 import android.content.Context
 import android.content.res.Configuration
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import androidx.annotation.RequiresApi
 import java.math.BigInteger
 import java.security.Key
 import java.security.KeyPairGenerator
@@ -57,11 +55,7 @@ class RSAImpl(private val alias: String) : KeyCipher {
                     KEYSTORE_PROVIDER_ANDROID
                 )
 
-                val spec: AlgorithmParameterSpec = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                    makeAlgorithmParameterSpecLegacy(context, start, end, alias)
-                } else {
-                    makeAlgorithmParameterSpec(start, end, alias)
-                }
+                val spec: AlgorithmParameterSpec =  makeAlgorithmParameterSpec(start, end, alias)
 
                 kpGenerator.initialize(spec)
                 kpGenerator.generateKeyPair()
@@ -78,25 +72,7 @@ class RSAImpl(private val alias: String) : KeyCipher {
         private const val KEYSTORE_PROVIDER_ANDROID: String = "AndroidKeyStore"
         private const val TYPE_RSA: String = "RSA"
 
-        @Suppress("DEPRECATION")
-        private fun makeAlgorithmParameterSpecLegacy(
-            context: Context,
-            start: Calendar,
-            end: Calendar,
-            alias: String
-        ): AlgorithmParameterSpec {
-            return android.security.KeyPairGeneratorSpec.Builder(context).setAlias(alias)
-                .setSubject(
-                    X500Principal(
-                        "CN=$alias"
-                    )
-                ).setSerialNumber(BigInteger.valueOf(1)).setStartDate(start.time)
-                .setEndDate(end.time).build()
 
-
-        }
-
-        @RequiresApi(Build.VERSION_CODES.M)
         private fun makeAlgorithmParameterSpec(
                 start: Calendar,
                 end: Calendar,
@@ -166,17 +142,10 @@ class RSAImpl(private val alias: String) : KeyCipher {
     }
 
     private fun getRSACipher(): Cipher {
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            Cipher.getInstance(
-                    "RSA/ECB/PKCS1Padding",
-                    "AndroidOpenSSL"
-            ) // error in android 6: InvalidKeyException: Need RSA private or public key
-        } else {
-            Cipher.getInstance(
-                    "RSA/ECB/PKCS1Padding",
-                    "AndroidKeyStoreBCWorkaround"
-            ) // error in android 5: NoSuchProviderException: Provider not available: AndroidKeyStoreBCWorkaround
-        }
+        return Cipher.getInstance(
+            "RSA/ECB/PKCS1Padding",
+            "AndroidKeyStoreBCWorkaround"
+        ) //
     }
 
     private fun getAlgorithmParameterSpec(): AlgorithmParameterSpec? {

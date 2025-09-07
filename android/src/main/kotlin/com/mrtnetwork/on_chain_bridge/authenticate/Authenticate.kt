@@ -32,11 +32,11 @@ interface Authenticate : OnChainCore {
                         result.success(auth.value())
                     };
                 }else{
-                  result.error("INVALID_ARGUMENT", "Missing reason", "")
+                  result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
 
                 }
             }
-            else -> result.error("INVALID_ARGUMENT", "Unknown method", "")
+            else -> result.error(OnChainCore.INVALID_ARGUMENTS, null, null)
 
         }
 
@@ -71,9 +71,9 @@ interface Authenticate : OnChainCore {
         val executor: Executor = ContextCompat.getMainExecutor(applicationContext)
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(title?: "Authenticate")
+            .setTitle(title?:title?: "Authenticate")
             .setSubtitle(reason)
-            .setNegativeButtonText(buttonTitle?: "Cancel")
+            .setNegativeButtonText(buttonTitle?:buttonTitle?: "Cancel")
             .setAllowedAuthenticators(
                 BiometricManager.Authenticators.BIOMETRIC_STRONG or
                 BiometricManager.Authenticators.BIOMETRIC_WEAK

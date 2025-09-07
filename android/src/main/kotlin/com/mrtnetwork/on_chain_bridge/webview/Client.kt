@@ -46,11 +46,7 @@ class CustomWebViewClient(private val methodChannel: MethodChannel, val id: Stri
 
     override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
         super.onReceivedError(view, request, error)
-        val errorMessage = if (Build.VERSION.SDK_INT < 23) {
-            error.toString()
-        } else {
-            error.description.toString()
-        }
+        val errorMessage =error.description.toString()
         val data = WebViewUtils.toJson(id,WebViewConst.onPageError,view, message = errorMessage)
         methodChannel.invokeMethod(WebViewConst.webView, data.toJson())
     }

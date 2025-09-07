@@ -4,7 +4,6 @@ import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
-import com.mrtnetwork.on_chain_bridge.OnChainCore
 import com.mrtnetwork.on_chain_bridge.webview.WebViewUtils.Companion.decodeHex
 import io.flutter.plugin.common.MethodChannel
 

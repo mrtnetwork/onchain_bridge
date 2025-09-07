@@ -2,6 +2,8 @@ library;
 
 import 'dart:async';
 import 'dart:io';
+import 'package:blockchain_utils/utils/binary/utils.dart';
+import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:on_chain_bridge/database/models/table.dart';

@@ -28,10 +28,10 @@ interface ShareImpl : OnChainCore {
                     }
                     result.success(true)
                 } catch (e: Exception) {
-                    result.error("-1", e.message, "")
+                    result.error(OnChainCore.INTERNAL_ERROR, e.message, null)
                 }
             }
-            else -> result.error("INVALID_ARGUMENT", "Unknown method", "")
+            else -> result.error(OnChainCore.INVALID_ARGUMENTS, "Unknown method", "")
 
         }
     }

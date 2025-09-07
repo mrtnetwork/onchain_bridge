@@ -44,11 +44,11 @@ class BarcodeScanner: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     @available(macOS 10.14, *)
     func startBarcodeScanner(result: FlutterResult, args: [String: Any]) {
         if(captureSession != nil){
-          result(FlutterError(code: "invalid_arguments", message: "Service already running.", details: nil))
+            result(FlutterError(code: OnChainBridgePluginConst.internalError, message: "Service already running.", details: nil))
           return;
         }
         guard let captureDevice = AVCaptureDevice.default(for: .video) else {
-            result(FlutterError(code: "CAMERA_ERROR", message: "No camera available", details: nil))
+            result(FlutterError(code:OnChainBridgePluginConst.internalError, message: "No camera available", details: nil))
             return
         }
         let width = args["width"] as! Double
@@ -76,7 +76,7 @@ class BarcodeScanner: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                 captureSession?.startRunning()
                 result(nil)
             } else {
-                result(FlutterError(code: "VIEW_CONTROLLER_ERROR", message: "ViewController not found", details: nil))
+                result(FlutterError(code: OnChainBridgePluginConst.internalError, message: "ViewController not found", details: nil))
             }
         } catch {
             stopBarcodeScanner()

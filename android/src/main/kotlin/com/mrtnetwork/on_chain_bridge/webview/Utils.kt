@@ -1,10 +1,5 @@
 package com.mrtnetwork.on_chain_bridge.webview
-
-import android.content.Context
-import android.content.res.AssetManager
-import android.graphics.Bitmap
 import android.webkit.WebView
-import java.io.ByteArrayOutputStream
 
 interface WebViewUtils {
     companion object {
@@ -15,18 +10,6 @@ interface WebViewUtils {
                 .toList()
         }
 
-        @ExperimentalUnsignedTypes // just to make it clear that the experimental unsigned types are used
-        fun ByteArray.toHex() = asUByteArray().joinToString("") { it.toString(16).padStart(2, '0') }
-        fun getFlutterAssetContent(context: Context, assetName: String): String? {
-            val assetManager: AssetManager = context.assets
-            val assetPath = "flutter_assets/$assetName"
-            return try {
-                assetManager.open(assetPath).bufferedReader().use { it.readText() }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
-            }
-        }
         fun toJson(
             id: String,
             eventName: String,

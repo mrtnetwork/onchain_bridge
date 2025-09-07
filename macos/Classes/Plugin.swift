@@ -8,6 +8,10 @@ import CoreImage
 import SystemConfiguration
 import LocalAuthentication
 
+struct OnChainBridgePluginConst{
+   static let invalidArguments: String = "INVALID_ARGUMENTS"
+    static let internalError: String = "INTERNAL_ERRORs"
+}
 public protocol MethodHandler {
     func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult)
 }
@@ -31,7 +35,6 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
     public func application(_ application: NSApplication, open urls: [URL]) {
         	
           for url in urls {
-              print("🔗 macOS received deep link: \(url)")
               let event = AppNativeEvent(type: .deeplink, value: url.absoluteString)
               eventSink?(event.toJson())
           }
@@ -92,11 +95,50 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
     
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args =  call.arguments as? [String:Any] else {
+            result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message:nil, details: nil))
+            return;//
+        }
         switch call.method {
+        case "pick_file":
+            let extension_ = args["extension"] as? String
+            let title = args["title"] as? String
+            NSOpenPanel.pickFile(extension_: extension_,window: mainWindow,title: title) { r in
+                switch r {
+                case .success(let url):
+                    result(url.path)
+                case .cancelled:
+                    result(nil)
+                case .failed(let reason):
+                    result(FlutterError(code:OnChainBridgePluginConst.internalError, message: reason, details: nil))
+                }
+            }
+            return;
+        case "save_file":
+            guard let fileName = args["file_name"] as? String,
+                  let filePath = args["file_path"] as? String,
+                  let extension_ = args["extension"] as? String else {
+                result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
+                return;//
+            }
+            let title = args["title"] as? String
+            NSSavePanel.saveFile(filePath: filePath,defaultFileName: fileName,
+                                 extension_: extension_,
+                                 window: mainWindow,
+                                 title:title) { r in
+                switch r {
+                case .success:
+                    result(true)
+                case .cancelled:
+                    result(false)
+                case .failed(let reason):
+                    result(FlutterError(code: OnChainBridgePluginConst.internalError, message: reason, details: nil))
+                }
+            }
+            return;
         case "authenticate":
-            guard let args =  call.arguments as? [String:Any],
-                  let type = args["type"] as? String else {
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Missing authenticate method type", details: nil))
+            guard let type = args["type"] as? String else {
+                result(FlutterError(code:OnChainBridgePluginConst.invalidArguments, message:nil, details: nil))
                 return;//
             }
             switch type {
@@ -113,7 +155,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
                         result(success.rawValue)
                     }
                 } else {
-                    result(FlutterError(code: "INVALID_ARGUMENT", message: "Missing reason", details: nil))
+                    result(FlutterError(code:OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                 }
                 break
             case "touch_id_status":
@@ -121,7 +163,7 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
                 result(status.rawValue)
                 break
             default:
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Unknown method", details: nil));
+                result(FlutterError(code:OnChainBridgePluginConst.invalidArguments, message: nil, details: nil));
                 break
             }
            
@@ -129,10 +171,6 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
             handle(call, webview:result)
             break
         case "share":
-            guard let args =  call.arguments as? [String:Any] else {
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing share arguments", details: nil))
-                return;
-            }
             let subject = args["subject"]as? String
             let path = args["path"] as? String
             let textToShare = args["text"] as? String
@@ -167,12 +205,12 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
             break;
         case "startBarcodeScanner":
             guard let args =  call.arguments as? [String:Any] else {
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing arguments", details: nil))
+                result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message:nil, details: nil))
                 return;
             }
             self.barcodeScanner.checkCameraAccess { granted in
                 if !granted {
-                    result(FlutterError(code: "CAMERA_PERMISSION_DENIED", message: "Camera access denied", details: nil))
+                    result(FlutterError(code: OnChainBridgePluginConst.internalError, message: "Camera access denied", details: nil))
                     return;
                 }
             }
@@ -183,9 +221,8 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
             break;
             
         case "windowsManager":
-            guard let args =  call.arguments as? [String:Any],
-                  let type = args["type"] as? String else {
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing windows method type.", details: nil))
+            guard let type = args["type"] as? String else {
+                result(FlutterError(code:OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                 return;
             }
             switch type {
@@ -289,9 +326,8 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
             }
             break
         case "secureStorage":
-            guard let args =  call.arguments as? [String:Any],
-                  let type = args["type"] as? String else {
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing arguments", details: nil))
+            guard let type = args["type"] as? String else {
+                result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                 return;
             }
             switch type {
@@ -381,9 +417,8 @@ public class OnChainBridgePlugin: NSObject, FlutterPlugin,FlutterStreamHandler,M
             keyValues["support"]=applicationSupportDirectoryURL.path;
             result(keyValues)
         case "lunch_uri":
-            guard let args =  call.arguments as? [String:Any],
-                  let uri = args["uri"] as? String else {
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Missing uri", details: nil))
+            guard let uri = args["uri"] as? String else {
+                result(FlutterError(code: OnChainBridgePluginConst.invalidArguments, message: nil, details: nil))
                 return;
             }
             let res = openURL(uri)

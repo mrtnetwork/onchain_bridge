@@ -4,6 +4,7 @@
 // 2. [window_manager](https://pub.dev/packages/window_manager) - Additionally, some methods are inspired by the window_manager plugin, which is licensed under the MIT license. The original project can be found at: https://github.com/leanflutter/window_manager
 
 import 'dart:async';
+import 'package:on_chain_bridge/constant/constant.dart';
 import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain_bridge/models/biometric/types.dart';
 import 'package:on_chain_bridge/models/models.dart';
@@ -58,6 +59,16 @@ abstract class OnChainBridgeInterface<
 
   Future<CREDENTIALRESPONSE?> createPlatformCredential(
       PlatformCredentialRequest params);
+
+  ///
+  Future<PickedFileContent?> pickAndReadFileContent(
+      {PickFileContentEncoding encoding = PickFileContentEncoding.hex,
+      AppFileType? type = AppFileType.txt});
+  Future<bool> saveFile(
+      {required String filePath,
+      required String fileName,
+      String? title,
+      AppFileType type = AppFileType.txt});
 }
 
 abstract class PlatformWebView {

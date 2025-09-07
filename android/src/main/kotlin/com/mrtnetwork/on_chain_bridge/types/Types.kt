@@ -17,3 +17,23 @@ data class AppNativeEvent(
         DEEPLINK
     }
 }
+
+
+
+interface FilePickCallback {
+
+    val mimeType: String?
+    fun onFilePicked(filePath: String)
+    fun onCancelled()
+    fun onError(errorMessage: String)
+}
+
+interface WriteFileInterface {
+    val filePath: String
+    val fileName: String
+    val extension: String
+
+    val mimeType: String
+    fun onPicked(success: Boolean)
+    fun onError(errorMessage: String)
+}
