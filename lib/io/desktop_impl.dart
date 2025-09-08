@@ -311,4 +311,13 @@ class DesktopPlatformInterface implements SpecificPlatfromMethods {
         .invokeMethod(NativeMethodsConst.windowsManager, arguments);
     return data;
   }
+
+  @override
+  Future<bool> setIcon(String path) async {
+    if (!Platform.isLinux) return false;
+    final Map<String, dynamic> arguments = {"path": path, "type": "setIcon"};
+    final data = await IoPlatformInterface.channel
+        .invokeMethod(NativeMethodsConst.windowsManager, arguments);
+    return data;
+  }
 }

@@ -4,6 +4,7 @@
 
 #define WM_GET_BOUNDS "getBounds"
 #define WM_SET_BOUNDS "setBounds"
+#define WM_SET_ICON "setIcon"
 #define WM_MAXIMUM_SIZE "maximumSize"
 #define WM_MINIMUM_SIZE "minimumSize"
 #define WM_SET_RESIZABLE "setResizable"
@@ -37,6 +38,7 @@ public:
 private:
     static void connect_window_signals(FlView *view, WindowsManager *self);
     FlValue *get_window_bounds();
+    bool set_icon(const gchar *path);
     void set_window_bounds(double x, double y, double width, double height);
     void set_minimum_size(double min_width, double min_height);
     void set_maximum_size(double min_width, double min_height);
@@ -653,6 +655,34 @@ bool WindowsManager::set_frameless()
     return true;
 }
 
+bool WindowsManager::set_icon(const gchar *path)
+{
+    if (window == nullptr)
+    {
+        g_printerr("Window is not initialized!\n");
+        return false;
+    }
+
+    GError *error = nullptr;
+    gboolean success = gtk_window_set_icon_from_file(GTK_WINDOW(window), path, &error);
+
+    if (!success)
+    {
+        if (error != nullptr)
+        {
+            g_printerr("Failed to set window icon: %s\n", error->message);
+            g_error_free(error);
+        }
+        else
+        {
+            g_printerr("Failed to set window icon: unknown error\n");
+        }
+        return false;
+    }
+
+    return true;
+}
+
 FlMethodResponse *WindowsManager::handle_windows_manager_calls(const gchar *method, FlValue *data)
 {
     FlValue *type = fl_value_lookup_string(data, "type");
@@ -669,6 +699,18 @@ FlMethodResponse *WindowsManager::handle_windows_manager_calls(const gchar *meth
     {
         FlValue *result = get_window_bounds();
         return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+    }
+    else if (strcmp(string_type, WM_SET_ICON) == 0)
+    {
+        FlValue *path = fl_value_lookup_string(data, "path");
+        if (path &&
+            fl_value_get_type(path) == FL_VALUE_TYPE_STRING)
+        {
+            const gchar *string_path = fl_value_get_string(path);
+            bool success = set_icon(string_path);
+            g_autoptr(FlValue) result = fl_value_new_bool(success);
+            return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+        }
     }
     else if (strcmp(string_type, WM_SET_BOUNDS) == 0)
     {

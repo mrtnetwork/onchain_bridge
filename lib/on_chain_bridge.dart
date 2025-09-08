@@ -98,6 +98,7 @@ abstract class SpecificPlatfromMethods {
   Future<bool> show();
   Future<bool> hide();
   Future<bool> init();
+  Future<bool> setIcon(String path);
   Future<bool> setMaximumSize(WidgetSize size);
   Future<bool> setMinimumSize(WidgetSize size);
   Future<void> setBounds(
