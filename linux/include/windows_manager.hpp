@@ -662,19 +662,27 @@ bool WindowsManager::set_icon(const gchar *path)
         return false;
     }
 
-    GError *error = nullptr;
-    gboolean success = gtk_window_set_icon_from_file(GTK_WINDOW(window), path, &error);
-
-    if (!success)
+#if GTK_CHECK_VERSION(4, 0, 0)
+    // GTK4: set application-wide default icon
+    GFile *file = g_file_new_for_path(path);
+    if (!g_file_query_exists(file, NULL))
     {
-        if (error != nullptr)
-        {
-            g_error_free(error);
-        }
+        g_object_unref(file);
         return false;
     }
 
+    GIcon *icon = g_file_icon_new(file);
+    g_application_set_default_icon(icon);
+
+    g_object_unref(icon);
+    g_object_unref(file);
+
     return true;
+#else
+    // GTK3: set icon for this window
+    gboolean success = gtk_window_set_icon_from_file(GTK_WINDOW(window), path, nullptr);
+    return success;
+#endif
 }
 
 FlMethodResponse *WindowsManager::handle_windows_manager_calls(const gchar *method, FlValue *data)
