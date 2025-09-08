@@ -52,7 +52,6 @@ endif()
 
 
 include_directories(BEFORE SYSTEM ${CMAKE_BINARY_DIR}/include)
-message(WARNING "Include directory: ${CMAKE_BINARY_DIR}/include")
 
 list(APPEND PLUGIN_SOURCES
   "on_chain_bridge_plugin.cpp"
