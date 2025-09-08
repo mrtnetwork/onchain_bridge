@@ -659,7 +659,6 @@ bool WindowsManager::set_icon(const gchar *path)
 {
     if (window == nullptr)
     {
-        g_printerr("Window is not initialized!\n");
         return false;
     }
 
@@ -670,12 +669,7 @@ bool WindowsManager::set_icon(const gchar *path)
     {
         if (error != nullptr)
         {
-            g_printerr("Failed to set window icon: %s\n", error->message);
             g_error_free(error);
-        }
-        else
-        {
-            g_printerr("Failed to set window icon: unknown error\n");
         }
         return false;
     }
