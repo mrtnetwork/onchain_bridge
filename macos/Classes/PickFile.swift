@@ -74,7 +74,7 @@ extension NSSavePanel {
                     do {
                         // Move file (you can also use copy if you prefer)
                         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
-                        completion(.success())
+                        completion(.success)
                     } catch {
                         completion(.failed(reason: "Failed to move file: \(error.localizedDescription)"))
                     }
