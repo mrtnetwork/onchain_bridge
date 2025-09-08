@@ -178,8 +178,6 @@ namespace on_chain_bridge
 	{
 		auto method = method_call.method_name();
 		const auto *args = std::get_if<flutter::EncodableMap>(method_call.arguments());
-		std::wstring path;
-
 		try
 		{
 			if (method == "secureStorage")
@@ -252,6 +250,32 @@ namespace on_chain_bridge
 					result->Error("INVALID_ARGUMENTS", "Unknown method.");
 				}
 			}
+			else if (method == "pick_file")
+			{
+				auto extension = OnChainWindowsUtils::GetStringArg("extension", args);
+				auto mime_type = OnChainWindowsUtils::GetStringArg("mime_type", args);
+				auto path = OnChainWindowsUtils::pick_file(extension, mime_type);
+				if (path.has_value())
+					result->Success(flutter::EncodableValue(path.value()));
+				else
+					result->Success(flutter::EncodableValue(std::monostate{}));
+			}
+			else if (method == "save_file")
+			{
+				auto file_name = OnChainWindowsUtils::GetStringArg("file_name", args);
+				auto file_path = OnChainWindowsUtils::GetStringArg("file_path", args);
+				auto extension = OnChainWindowsUtils::GetStringArg("extension", args);
+				auto mime_type = OnChainWindowsUtils::GetStringArg("mime_type", args);
+				if (extension.has_value() && file_path.has_value() && file_name.has_value() && mime_type.has_value())
+				{
+					result->Success(OnChainWindowsUtils::save_file(file_path.value(), file_name.value(), extension.value(), mime_type.value()));
+				}
+				else
+				{
+					result->Error("INVALID_ARGUMENTS", "Unknown method.");
+				}
+			}
+
 			else
 			{
 				result->Error("INVALID_ARGUMENTS", "Unknown method.");

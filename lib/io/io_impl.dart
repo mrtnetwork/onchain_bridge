@@ -271,8 +271,10 @@ class IoPlatformInterface extends OnChainBridgeInterface<
       {PickFileContentEncoding encoding = PickFileContentEncoding.hex,
       AppFileType? type = AppFileType.txt}) async {
     final result = await channel.invokeMethod<String?>(
-        NativeMethodsConst.pickFile,
-        {"extension": type?.extension, "mime_type": type?.mimeType});
+        NativeMethodsConst.pickFile, {
+      "extension": type?.getPickFileExtenson(platform),
+      "mime_type": type?.mimeType
+    });
     if (result == null) return null;
     final file = File(result);
     if (!file.existsSync()) return null;
@@ -287,7 +289,7 @@ class IoPlatformInterface extends OnChainBridgeInterface<
           data = StringUtils.encode(file.readAsStringSync());
           break;
         case PickFileContentEncoding.hex:
-          data = BytesUtils.fromHexString(file.readAsStringSync());
+          data = BytesUtils.fromHexString(file.readAsStringSync().trim());
           break;
       }
     } catch (e) {
@@ -306,8 +308,8 @@ class IoPlatformInterface extends OnChainBridgeInterface<
     final result =
         await channel.invokeMethod<bool>(NativeMethodsConst.saveFile, {
       "file_path": filePath,
-      "file_name": fileName,
-      "extension": type.extension,
+      "file_name": type.toFileName(fileName, platform),
+      "extension": type.getSaveFileExtenson(platform),
       "mime_type": type.mimeType,
       "title": title
     });
