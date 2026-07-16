@@ -1,191 +1,108 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_bridge/database/database.dart';
-import 'package:on_chain_bridge/synchronized/basic_lock.dart';
 import 'package:on_chain_bridge/web/api/window/indexed_db.dart';
-import 'package:on_chain_bridge/web/storage/database/constants/constants.dart';
 import 'package:on_chain_bridge/web/storage/database/models/completer.dart';
 import 'package:on_chain_bridge/web/storage/database/models/db.dart';
 import 'package:on_chain_bridge/web/storage/storage.dart';
 
-class _IDatabaseInterfaceData {
-  final IDatabaseJS database;
-  final ChaCha20Poly1305 crypto;
-  const _IDatabaseInterfaceData({required this.database, required this.crypto});
-}
+class IDatabseInterfaceJS extends DefaultDetabaseApi<EncryptedDatabaseJs> {
+  final String dbName;
+  final String? debugName;
+  final int instanceId;
+  IDatabseInterfaceJS(this.dbName, {this.debugName, required this.instanceId});
+  final SafeAtomicLock _lock = SafeAtomicLock();
+  EncryptedDatabaseJs? _database;
+  EncryptedDatabaseJs? get database => _database;
 
-class IDatabseInterfaceJS extends IDatabseInterface<IDatabaseJS> {
-  final bool upgradable;
-  IDatabseInterfaceJS({this.upgradable = true});
-  final SynchronizedLock _lock = SynchronizedLock();
-  InitializeDatabaseStatus _status = InitializeDatabaseStatus.init;
-  _IDatabaseInterfaceData? _database;
-  IDatabaseJS? get database => _database?.database;
-  SafeStorage? _storage;
-
-  _IDatabaseInterfaceData _getDatabase(ITableStructOperation params) {
+  @override
+  Future<EncryptedDatabaseJs> getDatabase() async {
     final database = _database;
     if (database == null) {
-      if (_status == InitializeDatabaseStatus.init) {
-        throw IDatabaseException('Database not initialized.');
-      }
-      throw IDatabaseException(
-          'The current environment does not support this database.');
+      throw IDatabaseException.unexpected(
+          'Database not initialized. Please call init() before using the database $dbName.');
     }
     return database;
   }
 
-  @override
-  Future<InitializeDatabaseStatus> openDatabase() async {
-    final status = await _initDb();
-    return status;
-  }
-
-  DATA? _decryptObject<DATA extends ITableData>(
-      DATA? data, _IDatabaseInterfaceData db) {
-    if (data == null) return null;
-    final bytes = data.data;
-    if (bytes.length < IDatabaseConst.nonceLength) return null;
-    final nonce = bytes.sublist(0, IDatabaseConst.nonceLength);
-    final decryptBytes =
-        db.crypto.decrypt(nonce, bytes.sublist(IDatabaseConst.nonceLength));
-    assert(decryptBytes != null);
-    if (decryptBytes == null) return null;
-    return data.copyWith(data: decryptBytes) as DATA;
-  }
-
-  T _encrypt<T extends ITableInsertOrUpdate>(
-      T data, _IDatabaseInterfaceData db) {
-    final nonce = QuickCrypto.generateRandom(IDatabaseConst.nonceLength);
-    final bytes = data.data;
-    final encryptData = db.crypto.encrypt(nonce, bytes);
-    return data.copyWith(data: [...nonce, ...encryptData]) as T;
-  }
-
-  @override
-  Future<DATA?> readDb<DATA extends ITableData>(ITableRead<DATA> params) async {
-    final db = _getDatabase(params);
-    final data = await db.database.read<DATA>(params);
-    return _decryptObject(data, db);
-  }
-
-  @override
-  Future<List<DATA>> readAllDb<DATA extends ITableData>(
-      ITableRead<DATA> params) async {
-    final db = _getDatabase(params);
-    final data = await db.database.readAll<DATA>(params);
-    return data.map((e) => _decryptObject(e, db)).whereType<DATA>().toList();
-  }
-
-  @override
-  Future<bool> removeDb(ITableRemove params) async {
-    final db = _getDatabase(params);
-    return await db.database.remove(params);
-  }
-
-  @override
-  Future<bool> writeDb(ITableInsertOrUpdate params) async {
-    final db = _getDatabase(params);
-    return await db.database.write(_encrypt(params, db));
-  }
-
-  @override
-  Future<bool> writeAllDb(List<ITableInsertOrUpdate> params) async {
-    if (params.isEmpty) return false;
-
-    final db = _getDatabase(params.first);
-    final encrypt = params.map((e) => _encrypt(e, db)).toList();
-    return await db.database.writeAll(encrypt);
-  }
-
-  @override
-  Future<bool> removeAllDb(List<ITableRemove> params) async {
-    if (params.isEmpty) return false;
-    final db = _getDatabase(params.first);
-    return await db.database.removeAll(params);
-  }
-
-  @override
-  Future<bool> dropDb(ITableDrop params) async {
-    final db = _getDatabase(params);
-    return await db.database.drop(params);
-  }
-
-  void _onDBClosed() {
-    _lock.synchronized(() async {
-      _status = InitializeDatabaseStatus.init;
-      _database = null;
+  Future<Result<void, IException>> openDatabase() async {
+    return _lock.run(() async {
+      final database = this.database;
+      if (database != null) return Ok(database);
+      final init = await _openDatabaseInternal();
+      return init.map((database) {
+        _database = database;
+      });
     });
   }
 
-  Future<InitializeDatabaseStatus> _initDb() async {
-    if (_status != InitializeDatabaseStatus.init) return _status;
-    _status = await _lock.synchronized(() async {
-      if (_status != InitializeDatabaseStatus.init) return _status;
-      final idb = indexedDB;
-      if (idb == null) {
-        return InitializeDatabaseStatus.error;
-      } else {
-        IDBDatabase? db;
-        try {
-          final request = idb.open(IDatabaseConst.appDbName);
-          final completer = IDBOpenDBRequestCompleter(
-            request: request,
-            onUpgradeNeeded: (db) {},
-          );
-          db = await completer.wait;
+  void _onDBClosed() {}
 
-          ///
-          final database = IDatabaseJS(
-              dbName: IDatabaseConst.appDbName,
-              database: db,
-              upgradable: upgradable,
-              ondbclosed: _onDBClosed);
-          await database.lock.synchronized(() async {
-            final data = ITableReadStructA(
-                tableName: IDatabaseConst.iDatabaseTableName,
-                storage: 0,
-                storageId: 0,
-                key: IDatabaseConst.dbVersion,
-                keyA: '');
-            final key = await database.readInternal(data);
-            if (key != null && key.data.length == IDatabaseConst.dbKeyLength) {
-              _database = _IDatabaseInterfaceData(
-                database: database,
-                crypto: ChaCha20Poly1305(key.data),
-              );
-              return InitializeDatabaseStatus.ready;
-            }
-            final stores = database.storeNames;
-            for (final i in stores) {
-              if (i == IDatabaseConst.iDatabaseTableName) continue;
-              await database.dropInternal(ITableDropStructA(tableName: i));
-            }
-            final cryptoKey = QuickCrypto.generateRandom().asImmutableBytes;
-            final params = ITableInsertOrUpdateStructA(
-                storage: 0,
-                storageId: 0,
-                data: cryptoKey,
-                tableName: IDatabaseConst.iDatabaseTableName,
-                key: IDatabaseConst.dbVersion);
-            await database.writeInternal(params);
-            _database = _IDatabaseInterfaceData(
-              database: database,
-              crypto: ChaCha20Poly1305(cryptoKey),
-            );
-          });
-          return InitializeDatabaseStatus.ready;
-        } catch (e) {
-          db?.close();
-          if (e == IDatabaseJSConstants.unableToUpgradeDatabase) {
-            return InitializeDatabaseStatus.init;
-          }
-          return InitializeDatabaseStatus.error;
+  Future<Result<EncryptedDatabaseJs, IException>>
+      _openDatabaseInternal() async {
+    final database = this.database;
+    if (database != null) return Ok(database);
+    final idb = indexedDB;
+    if (idb == null) {
+      return Err(IDatabaseException.unsupportedPlatform);
+    } else {
+      IDBDatabase? db;
+      try {
+        final request = idb.open(dbName);
+        final completer = IDBOpenDBRequestCompleter(
+          request: request,
+          onUpgradeNeeded: (db) {},
+        );
+        db = await completer.wait;
+
+        ///
+        final database = EncryptedDatabaseJs(
+            dbName: dbName,
+            database: db,
+            instanceId: instanceId,
+            ondbclosed: _onDBClosed,
+            crypto: ChaCha20Poly1305(List<int>.filled(32, 0)));
+        final data = ITableReadStructA(
+            tableName: IDatabaseConst.iDatabaseTableName,
+            storage: 0,
+            storageId: 0,
+            key: IDatabaseConst.dbVersion,
+            keyA: '');
+        final key = await database.readInternal(data);
+        final keyData = key?.data;
+        if (keyData != null && keyData.length == IDatabaseConst.dbKeyLength) {
+          database.setCrypto(ChaCha20Poly1305(keyData));
+          return Ok(database);
         }
+        final stores = db.objectStoreNames.toDart();
+        for (final i in stores) {
+          if (i == IDatabaseConst.iDatabaseTableName) continue;
+          await database.drop(ITableDropStructA(tableName: i));
+        }
+        final cryptoKey = QuickCrypto.generateRandom().asImmutableBytes;
+        final params = ITableInsertOrUpdateStructA(
+            storage: 0,
+            storageId: 0,
+            data: cryptoKey,
+            tableName: IDatabaseConst.iDatabaseTableName,
+            key: IDatabaseConst.dbVersion);
+        await database.writeInternal(params);
+        database.setCrypto(ChaCha20Poly1305(cryptoKey));
+        return Ok(database);
+      } on IDatabaseException catch (e) {
+        return Err(e);
+      } catch (e) {
+        db?.close();
+        return Err(IDatabaseException.unexpected(
+            "Failed to initialize index db ${e.toString()}"));
       }
-    });
-    return _status;
+    }
   }
+}
 
+class WebPlatformStorage implements PlatformStorage {
+  SafeStorage? _storage;
   Future<SafeStorage> _getStorage() async {
     final storage = _storage ??= await SafeStorage.init();
     return storage;
@@ -238,6 +155,20 @@ class IDatabseInterfaceJS extends IDatabseInterface<IDatabaseJS> {
   Future<bool> removeMultipleStorage(List<String> keys) async {
     final storage = await _getStorage();
     await storage.removes(keys);
+    return true;
+  }
+
+  @override
+  Future<bool> removeSecure(String key) async {
+    final storage = await _getStorage();
+    await storage.remove(key);
+    return true;
+  }
+
+  @override
+  Future<bool> writeSecure(String key, String value) async {
+    final storage = await _getStorage();
+    await storage.save(key, value);
     return true;
   }
 }

@@ -34,9 +34,9 @@ extension type Runtime._(JSObject _) {
 
   external JSEvent<void Function(RuntimePort port)> get onConnect;
 
-  Future<WalletEvent?> sendMessage_(
+  Future<JSWalletEventDart?> sendMessage_(
       {String? extensionId,
-      required WalletEvent message,
+      required JSWalletEventDart message,
       SendMessageOption? options}) async {
     final event = message.toJsEvent();
     final future = sendMessageAsync(extensionId, event, options).toDart;

@@ -25,7 +25,7 @@ extension type MediaStream._(JSObject _) implements JSObject {
   external String? get label;
   external bool? get muted;
 
-  void stop() async {
+  void stop() {
     final dartTracks = getTracks().toDart;
     for (final i in dartTracks) {
       i.stop();

@@ -5,270 +5,274 @@ export 'wallet/event.dart';
 export 'storage/storage.dart';
 import 'dart:async';
 import 'dart:js_interop';
-import 'package:blockchain_utils/utils/binary/utils.dart';
-import 'package:blockchain_utils/utils/string/string.dart';
-import 'package:on_chain_bridge/database/models/table.dart';
+import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_bridge/database/core/interface.dart';
 import 'package:on_chain_bridge/exception/exception.dart';
-import 'package:on_chain_bridge/models/biometric/types.dart';
 import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_bridge/on_chain_bridge.dart';
 import 'package:on_chain_bridge/web/api/api.dart';
+import 'package:on_chain_bridge/web/interface/interface.dart';
 import 'package:on_chain_bridge/web/storage/database/interface/interface.dart';
+import 'package:on_chain_bridge/web/types/file.dart';
 
 OnChainBridgeInterface getPlatformInterface() => WebPlatformInterface._();
 
 class WebPlatformInterface extends OnChainBridgeInterface<
-    PlatformCredentialWebResponse, PlatformCredentialAutneticateWebRequest> {
+    PlatformCredentialWebResponse,
+    PlatformCredentialAutneticateWebRequest,
+    WebFile> implements IWebOnChainBridgeInterface {
   WebPlatformInterface._();
-  late final IDatabseInterfaceJS database;
 
   @override
-  Future<DeviceInfo> getDeviceInfo() {
-    throw DeviceInfo();
-  }
-
-  @override
-  Future<bool> secureFlag({required bool isSecure}) async {
-    return false;
+  Future<Result<DeviceInfo, IException>> getDeviceInfo() async {
+    return Err(OnChainBridgeException.unsuported);
   }
 
   @override
-  Future<bool> share(Share share) {
-    return _share(share);
+  Future<Result<bool, IException>> secureFlag({required bool isSecure}) async {
+    return Err(OnChainBridgeException.unsuported);
   }
 
-  String _toFilePath(String path) {
-    if (path.startsWith("blob:")) {
-      return path.replaceFirst("blob:", "");
-    }
-    return path;
-  }
+  @override
+  Future<Result<bool, IException>> share(IShare<WebFile> share) async {
+    return window().andThenAsync((window) async {
+      try {
+        switch (share) {
+          case IShareText<WebFile>():
+            await window.navigator.share_(title: share.subject);
+            return Ok(true);
 
-  Future<bool> _share(Share share) async {
-    try {
-      List<JSFile> files = [];
-      if (share.isFile) {
-        final response = await jsWindow.fetch_(_toFilePath(share.path!));
-        if (response.status != 200) return false;
-        final file = JSFile([await response.arrayBuffer().toDart].toJS,
-            share.fileName!, JSFileOption(type: share.getMimeType()));
-        files.add(file);
+          case IShareFile<WebFile>(:final file, :final subject, :final message):
+            await window.navigator
+                .share_(title: subject, files: [file.file], text: message);
+            return Ok(true);
+        }
+      } catch (_) {
+        return Err(OnChainBridgeException.unexpectedError);
       }
-      await jsWindow.navigator
-          .share_(title: share.subject, text: share.text, files: files);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    });
   }
 
   @override
-  Future<AppPath> path(String applicationId) {
-    throw OnChainBridgeException.unsuported;
+  Future<Result<AppPath, IException>> path(String applicationId) async {
+    return Err(OnChainBridgeException.unsuported);
   }
 
   @override
-  Future<bool> launchUri(String uri) async {
-    final result = jsWindow.open(uri, null, 'noopener,noreferrer');
-    return result != null;
+  Future<Result<bool, IException>> launchUri(String uri) async {
+    return window()
+        .map((window) => window.open(uri, null, 'noopener,noreferrer') != null);
   }
 
   @override
-  SpecificPlatfromMethods get desktop => throw UnimplementedError(
-      "only available in desktop platforms (windows, macos)");
+  Result<DesktopPlatformInterface, IException> get desktop =>
+      Err(OnChainBridgeException.unsuported);
 
   @override
-  Future<Stream<BarcodeScannerResult>> startBarcodeScanner(
+  Future<Result<Stream<BarcodeScannerResult>, IException>> startBarcodeScanner(
       {BarcodeScannerParams param = const EmptyBarcodeScannerParams()}) {
     throw OnChainBridgeException.unsuported;
   }
 
   @override
-  Future<void> stopBarcodeScanner() {
-    throw OnChainBridgeException.unsuported;
+  Future<Result<void, IException>> stopBarcodeScanner() async {
+    return Err(OnChainBridgeException.unsuported);
   }
 
   @override
-  Future<bool> hasBarcodeScanner() async {
-    return jsWindow.barcode != null;
+  Future<Result<bool, IException>> hasBarcodeScanner() async {
+    return window().map((window) => window.barcode.isDefinedAndNotNull);
   }
 
-  // final _database = IDatabseInterfaceJS();
-
   @override
-  Future<PlatformConfig> init(String applicationId,
+  Future<Result<PlatformConfig, IException>> initMain(AppConfig config,
       {bool upgradableDatebase = true}) async {
-    database = IDatabseInterfaceJS(upgradable: upgradableDatebase);
-    final open = await database.openDatabase();
-    final barcode = await hasBarcodeScanner().catchError((e) => false);
-    return PlatformConfig(
-        platform: platform,
-        hasBarcodeScanner: barcode,
-        dbSupported: open.isReady,
-        supportWebView: false,
-        isExtension: isExtension);
+    final barcode = await hasBarcodeScanner();
+    return Ok(PlatformConfig(
+        platform: AppPlatform.web,
+        isExtension: isExtension,
+        features: [if (barcode.ok() ?? false) PlatformFeatures.barcode]));
   }
 
   @override
-  PlatformWebView get webView => throw UnimplementedError();
+  Result<PlatformWebViewInterface, IException> get webView =>
+      Err(OnChainBridgeException.unsuported);
 
   @override
-  AppPlatform get platform => AppPlatform.web;
+  late final Result<AppPlatform, IException> platform = Ok(AppPlatform.web);
 
   @override
-  Future<String?> readClipboard() async {
-    return jsWindow.navigatorNullable?.clipboard?.readText_();
+  Future<Result<String?, IException>> readClipboard() async {
+    return window().andThenAsync((window) async =>
+        Ok(await window.navigatorNullable?.clipboard?.readText_()));
   }
 
   @override
-  Future<bool> writeClipboard(String text) async {
-    return await jsWindow.navigatorNullable?.clipboard?.writeText_(text) ??
-        false;
+  Future<Result<bool, IException>> writeClipboard(String text) async {
+    return window().andThenAsync((window) async => Ok(
+        await window.navigatorNullable?.clipboard?.writeText_(text) ?? false));
   }
 
-  StreamSubscription<dynamic>? _onOnline;
-  StreamSubscription<dynamic>? _onOffline;
+  StreamSubscription<JSObject?>? _onOnline;
+  StreamSubscription<JSObject?>? _onOffline;
   late final StreamController<bool> _onNetworkChange =
-      StreamController.broadcast(
-          sync: true,
-          onCancel: () {
-            _onOnline?.cancel();
-            _onOnline = null;
-            _onOffline?.cancel();
-            _onOffline = null;
-          },
-          onListen: () => _onNetworkChange.add(jsWindow.navigator.onLine));
+      StreamController.broadcast(onCancel: () {
+    _onOnline?.cancel();
+    _onOnline = null;
+    _onOffline?.cancel();
+    _onOffline = null;
+  }, onListen: () {
+    final window = jsWindowOrNull;
+    if (window == null) return;
+    _onNetworkChange.add(window.navigator.onLine);
+  });
   @override
-  Stream<bool> get onNetworkStatus {
-    _onOnline ??= jsWindow.stream('online').listen((e) {
-      if (_onNetworkChange.hasListener) _onNetworkChange.add(true);
+  Result<Stream<bool>, IException> get onNetworkStatus {
+    return window().map((window) {
+      _onOnline ??= window.stream('online').stream.listen((e) {
+        if (_onNetworkChange.hasListener) _onNetworkChange.add(true);
+      });
+      _onOffline ??= window.stream('offline').stream.listen((e) {
+        if (_onNetworkChange.hasListener) _onNetworkChange.add(false);
+      });
+
+      return _onNetworkChange.stream;
     });
-    _onOffline ??= jsWindow.stream('offline').listen((e) {
-      if (_onNetworkChange.hasListener) _onNetworkChange.add(false);
+  }
+
+  @override
+  Future<Result<TouchIdStatus, IException>> touchIdStatus() async {
+    if (isExtension) return Ok(TouchIdStatus.notAvailable);
+    return window().mapAsync((window) async {
+      final cred = window.navigator.credentials;
+      if (cred == null) return TouchIdStatus.notAvailable;
+      final platformAuth = await PublicKeyCredential
+          .isUserVerifyingPlatformAuthenticatorAvailable_();
+      if (platformAuth) return TouchIdStatus.available;
+      return TouchIdStatus.notAvailable;
     });
-
-    return _onNetworkChange.stream;
   }
 
   @override
-  Future<DATA?> readDb<DATA extends ITableData>(ITableRead<DATA> params) {
-    return database.readDb(params);
-  }
-
-  @override
-  Future<List<DATA>> readAllDb<DATA extends ITableData>(
-      ITableRead<DATA> params) {
-    return database.readAllDb(params);
-  }
-
-  @override
-  Future<bool> removeDb(ITableRemove params) {
-    return database.removeDb(params);
-  }
-
-  @override
-  Future<bool> writeDb(ITableInsertOrUpdate params) {
-    return database.writeDb(params);
-  }
-
-  @override
-  Future<bool> writeAllDb(List<ITableInsertOrUpdate> params) {
-    return database.writeAllDb(params);
-  }
-
-  @override
-  Future<bool> removeAllDb(List<ITableRemove> params) {
-    return database.removeAllDb(params);
-  }
-
-  @override
-  Future<bool> dropDb(ITableDrop params) {
-    return database.dropDb(params);
-  }
-
-  @override
-  Future<TouchIdStatus> touchIdStatus() async {
-    if (isExtension) return TouchIdStatus.notAvailable;
-    final cred = jsWindow.navigator.credentials;
-    if (cred == null) return TouchIdStatus.notAvailable;
-    final platformAuth = await PublicKeyCredential
-        .isUserVerifyingPlatformAuthenticatorAvailable_();
-    if (platformAuth) return TouchIdStatus.available;
-    return TouchIdStatus.notAvailable;
-  }
-
-  @override
-  Future<BiometricResult> authenticate(
+  Future<Result<BiometricResult, IException>> authenticate(
       PlatformCredentialAutneticateWebRequest request) async {
-    final credential = jsWindow.navigator.credentials;
-    if (credential == null) return BiometricResult.notAvailable;
-    final response =
-        await credential.get_(id: request.id, challenge: request.challange);
-    if (response == null) return BiometricResult.failed;
-    return request.verify(
-      InternalPublicKeyWebAuthResponse(
-          authenticatorData:
-              response.response.authenticatorData.toDart.asUint8List(),
-          clientDataJSON: response.response.clientDataJSON.toDart.asUint8List(),
-          signature: response.response.signature.toDart.asUint8List()),
-    );
+    return window().andThenAsync((window) async {
+      final credential = window.navigator.credentials;
+      if (credential == null) return Ok(BiometricResult.notAvailable);
+      final response =
+          await credential.get_(id: request.id, challenge: request.challange);
+      if (response == null) return Ok(BiometricResult.failed);
+      return await request.verify(
+        InternalPublicKeyWebAuthResponse(
+            authenticatorData:
+                response.response.authenticatorData.toDart.asUint8List(),
+            clientDataJSON:
+                response.response.clientDataJSON.toDart.asUint8List(),
+            signature: response.response.signature.toDart.asUint8List()),
+      );
+    });
   }
 
   @override
-  Future<PlatformCredentialWebResponse?> createPlatformCredential(
-      PlatformCredentialRequest params) async {
-    final credential = jsWindow.navigator.credentials;
-    if (credential == null) return null;
-    final id = await credential.create_(
-        rpName: params.appName,
-        name: params.name,
-        displayName: params.displayName,
-        id: params.accountId);
-    if (id == null) return null;
-    return PlatformCredentialWebResponse(
-        id: id.id.toDart,
-        publicKey: BytesUtils.toHexString(
-            id.response.getPublicKey().toDart.asUint8List()));
+  Future<Result<PlatformCredentialWebResponse?, IException>>
+      createPlatformCredential(PlatformCredentialRequest params) async {
+    return window().andThenAsync((window) async {
+      final credential = window.navigatorNullable?.credentials;
+      if (credential == null) return Ok(null);
+      final id = await credential.create_(
+          rpName: params.appName,
+          name: params.name,
+          displayName: params.displayName,
+          id: params.accountId);
+      if (id == null) return Ok(null);
+      return Ok(PlatformCredentialWebResponse(
+          id: id.id.toDart,
+          publicKey: BytesUtils.toHexString(
+              id.response.getPublicKey().toDart.asUint8List())));
+    });
   }
 
   @override
-  Future<PickedFileContent?> pickAndReadFileContent(
+  Future<Result<PickedFileContent?, IException>> pickAndReadFileContent(
       {PickFileContentEncoding encoding = PickFileContentEncoding.hex,
       AppFileType? type = AppFileType.txt}) async {
-    final file = await jsWindow.document
-        .readFileContent([if (type != null) type.extension]);
-    if (file == null) return null;
-    List<int> data;
-    try {
-      switch (encoding) {
-        case PickFileContentEncoding.bytes:
-          data = await file.toBytes();
-          break;
-        case PickFileContentEncoding.utf8:
-          data = StringUtils.encode(await file.toText());
-          break;
-        case PickFileContentEncoding.hex:
-          data = BytesUtils.fromHexString(await file.toText());
-          break;
-      }
-    } catch (e) {
-      throw OnChainBridgeException.invalidFileData;
-    }
-
-    return PickedFileContent(name: file.name, data: data, path: null);
+    return window().andThenAsync((window) async {
+      final file =
+          await window.document.pickFile([if (type != null) type.extension]);
+      return file.andThenAsync((file) async {
+        if (file == null) return Ok(null);
+        switch (encoding) {
+          case PickFileContentEncoding.bytes:
+            final bytes = await file.toBytes();
+            return bytes.map(
+                (e) => PickedFileContent(name: file.name, data: e, path: null));
+          case PickFileContentEncoding.utf8:
+            final text = await file.toText();
+            return text.map((e) => PickedFileContent(
+                name: file.name, data: StringUtils.encode(e), path: null));
+          case PickFileContentEncoding.hex:
+            final text = await file.toText();
+            return text.andThen((e) {
+              final toBytes = BytesUtils.tryFromHexString(e);
+              if (toBytes == null) {
+                return Err(OnChainBridgeException.invalidFileData);
+              }
+              return Ok(PickedFileContent(
+                  name: file.name, data: toBytes, path: null));
+            });
+        }
+      });
+    });
   }
 
   @override
-  Future<bool> saveFile(
-      {required String filePath,
-      required String fileName,
+  Future<Result<WebFile?, IException>> pickFile({AppFileType? type}) async {
+    return window().andThenAsync((window) async {
+      final result =
+          await window.document.pickFile([if (type != null) type.extension]);
+      return result.map((e) {
+        if (e == null) return null;
+        return WebFile(e);
+      });
+    });
+  }
+
+  @override
+  Future<Result<bool, IException>> saveFile(
+      {required WebFile file,
       String? title,
       AppFileType type = AppFileType.txt}) async {
-    if (!fileName.contains(".")) {
-      fileName = "$fileName.${type.extension}";
-    }
-    jsWindow.document.downloadFile(
-        fileBytes: StringUtils.encode(filePath), fileName: fileName);
-    return true;
+    return window().map((window) {
+      window.documentOrNull
+          ?.downloadJsFile(file: file.file, fileName: file.name);
+      return window.documentOrNull != null;
+    });
   }
+
+  @override
+  Result<PlatformStorage, IException> platformStorage() {
+    return Ok(WebPlatformStorage());
+  }
+
+  @override
+  Result<ChromeAPI, IException> chromeApi() {
+    final chrome = extensionOrNull;
+    if (!isExtensionContext || chrome == null) {
+      return Err(OnChainBridgeException.unsuported);
+    }
+    return Ok(chrome);
+  }
+
+  @override
+  bool get isExtensionContext => isExtension;
+
+  @override
+  Result<Window, IException> window() {
+    final window = jsWindowOrNull;
+    if (window == null) return Err(OnChainBridgeException.unsuported);
+    return Ok(window);
+  }
+
+  @override
+  Future<void> close() async {}
 }

@@ -3,7 +3,7 @@ import 'dart:js_interop';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:blockchain_utils/crypto/crypto/chacha20poly1305/chacha20poly1305.dart';
-import 'package:on_chain_bridge/exception/exception.dart';
+import 'package:on_chain_bridge/database/exception/exception.dart';
 import 'package:on_chain_bridge/web/api/window/indexed_db.dart';
 import 'package:on_chain_bridge/web/storage/constant/constant.dart';
 import 'package:on_chain_bridge/web/storage/storage.dart';
@@ -17,8 +17,8 @@ class IndexDbStorage extends SafeStorage {
       completer.complete(request.result);
     }.toJS;
     request.onerror = (JSAny _) {
-      completer.completeError(OnChainBridgeException(
-          'An unexpected error occurred while sending request to IndexedDB database.'));
+      completer.completeError(
+          IDatabaseException.unexpected("Database onerror calleed."));
     }.toJS;
     return completer.future.timeout(const Duration(seconds: 10));
   }
@@ -29,8 +29,8 @@ class IndexDbStorage extends SafeStorage {
       completer.complete();
     }.toJS;
     transaction.onerror = (JSAny _) {
-      completer.completeError(OnChainBridgeException(
-          'An unexpected error occurred while sending request to IndexedDB database.'));
+      completer.completeError(
+          IDatabaseException.unexpected("Database onerror calleed."));
     }.toJS;
     return completer.future.timeout(const Duration(seconds: 10));
   }
@@ -66,7 +66,7 @@ class IndexDbStorage extends SafeStorage {
       {String? dbName, bool retry = false}) async {
     final db = indexedDB;
     if (db == null) {
-      throw OnChainBridgeException('IndexedDB not supported on this browser.');
+      throw IDatabaseException.unsupportedPlatform;
     }
 
     final request = db.open(dbName ?? StorageConst.dbName);
@@ -85,15 +85,14 @@ class IndexDbStorage extends SafeStorage {
     }.toJS;
     request.onerror = (JSAny _) {
       if (!completer.isCompleted) {
-        completer.completeError(OnChainBridgeException(
-            'An unexpected error occurred while opening the IndexedDB database.'));
+        completer.completeError(
+            IDatabaseException.unexpected("Database onerror calleed."));
       }
     }.toJS;
     final database = await completer.future;
     if (!database.objectStoreNames.contains(StorageConst.indexedDbStoreName)) {
       if (retry) {
-        throw OnChainBridgeException(
-            'An unexpected error occurred while opening the IndexedDB database.');
+        throw IDatabaseException.unexpected(null);
       }
       database.close();
       final r = db.deleteDatabase(dbName ?? StorageConst.dbName);

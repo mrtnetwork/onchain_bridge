@@ -1,18 +1,35 @@
 import 'package:on_chain_bridge/models/device/models/platform.dart';
 
+enum PlatformFeatures {
+  barcode,
+  webview,
+}
+
 class PlatformConfig {
   static const int _storageVersion = 1;
   final AppPlatform platform;
-  final bool hasBarcodeScanner;
   final int storageVersion;
-  final bool supportWebView;
   final bool isExtension;
-  final bool dbSupported;
+  final List<PlatformFeatures> features;
   const PlatformConfig(
       {required this.platform,
-      required this.hasBarcodeScanner,
-      required this.supportWebView,
       required this.isExtension,
-      required this.dbSupported,
+      required this.features,
       this.storageVersion = _storageVersion});
+
+  bool get hasWebview => features.contains(PlatformFeatures.webview);
+  bool get hasBarcodeScanner => features.contains(PlatformFeatures.barcode);
+}
+
+enum PlatIsolateformInitializationStatus {
+  normal,
+  unsupportNetSdk,
+  failed;
+
+  bool get isNormal => this == normal;
+}
+
+class PlatformIsolateConfig {
+  final PlatIsolateformInitializationStatus status;
+  const PlatformIsolateConfig(this.status);
 }

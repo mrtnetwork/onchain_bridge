@@ -10,17 +10,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   plugin_platform_interface: ^2.1.8
-  # blockchain_utils:
-  #   path: ../blockchain_utils
-  blockchain_utils: ^5.4.0
+  blockchain_utils: ^7.1.0
     
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  
-
+  test: ^1.26.3
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

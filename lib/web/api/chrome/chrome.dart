@@ -5,3 +5,6 @@ export 'api/runtime.dart';
 export 'api/events.dart';
 export 'api/action.dart';
 export 'api/windows.dart';
+export 'api/sidebar_action.dart';
+export 'api/side_pannel.dart';
+export 'models/models.dart';

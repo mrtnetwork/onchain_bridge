@@ -1,4 +1,7 @@
-class WidgetRect {
+import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_bridge/serialization/serialization.dart';
+
+class WidgetRect with AppSerialization {
   final double height;
   final double width;
   final double x;
@@ -10,20 +13,18 @@ class WidgetRect {
       required this.x,
       required this.y,
       this.devicePixelRatio});
+  factory WidgetRect.deserialize({List<int>? bytes, CborObject? object}) {
+    final values = AppSerialization.decodeTaggedValue(
+        identifier: OnChainBrdigeSerializationIdentifier.widgetReact,
+        cborBytes: bytes,
+        cborObject: object);
 
-  static WidgetRect? fromString(String? v) {
-    if (v == null) return null;
-    try {
-      final numbers = v.split('_').map((e) => double.tryParse(e)).toList();
-      return WidgetRect(
-          height: numbers[0]!,
-          width: numbers[1]!,
-          x: numbers[2]!,
-          y: numbers[3]!,
-          devicePixelRatio: numbers[4]!);
-    } catch (_) {
-      return null;
-    }
+    return WidgetRect(
+        height: values.rawValueAt(0),
+        width: values.rawValueAt(1),
+        x: values.rawValueAt(2),
+        y: values.rawValueAt(3),
+        devicePixelRatio: values.rawValueAt(4));
   }
 
   WidgetRect copyWith(
@@ -41,7 +42,18 @@ class WidgetRect {
   }
 
   @override
-  String toString() {
-    return "${height}_${width}_${x}_${y}_$devicePixelRatio";
-  }
+  SerializationIdentifier get serializationIdentifier =>
+      OnChainBrdigeSerializationIdentifier.widgetReact;
+
+  @override
+  List<CborObject?> get serializationItems => [
+        CborFloatValue(height),
+        CborFloatValue(width),
+        CborFloatValue(x),
+        CborFloatValue(y),
+        switch (devicePixelRatio) {
+          null => CborNullValue(),
+          double v => CborFloatValue(v),
+        }
+      ];
 }

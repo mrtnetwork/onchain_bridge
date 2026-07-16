@@ -53,6 +53,10 @@ extension type DOMStringList._(JSObject _) implements JSObject {
   external factory DOMStringList();
   external int get length;
   external bool contains(String _);
+
+  List<String> toDart() {
+    return JSArray.from<JSString>(this).toDart.map((e) => e.toDart).toList();
+  }
 }
 @JS("IDBObjectStore")
 extension type IDBObjectStore._(JSObject _) implements JSAny {
@@ -100,8 +104,6 @@ extension type IDBRequest<RESULT extends JSAny?>._(JSObject _)
   external RESULT get result;
   external set onerror(JSFunction _);
   external set onsuccess(JSFunction? _);
-
-  // external IDBIndex get source;
 }
 @JS("DOMException")
 extension type DOMException._(JSObject _) implements JSAny {

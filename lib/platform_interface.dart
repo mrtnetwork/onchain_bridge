@@ -2,18 +2,12 @@ library;
 
 import 'package:on_chain_bridge/base.dart'
     if (dart.library.js_interop) 'web/web.dart'
-    if (dart.library.io) 'io/io_platforms.dart';
-import 'package:on_chain_bridge/models/models.dart';
+    if (dart.library.io) 'native/io_platforms.dart';
 import 'on_chain_bridge.dart';
 export 'models/models.dart';
+export 'net_sdk/net_sdk.dart';
+export 'interface/interface.dart';
 
 class PlatformInterface {
   static final OnChainBridgeInterface instance = getPlatformInterface();
-  static AppPlatform get appPlatform => instance.platform;
-  static bool get isWindows => appPlatform == AppPlatform.windows;
-  static bool get isWeb => appPlatform == AppPlatform.web;
-  static bool get isMacos => appPlatform == AppPlatform.macos;
-  static bool get isLinux => appPlatform == AppPlatform.linux;
-
-  static PlatformWebView get webViewController => instance.webView;
 }

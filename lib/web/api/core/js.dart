@@ -14,6 +14,7 @@ extension type JSOBJ(JSObject _) implements JSObject {
   external static JSAny entries(JSAny? val);
   external bool hasOwnProperty(String nameOrSymbol);
   external static bool hasOwn(JSAny? obj, String prop);
+
   static List<String>? keys_(JSAny? val) {
     if (val.isUndefinedOrNull) return null;
     return JSOBJ.keys(val)?.toDart.map((e) => e.toDart).toList();

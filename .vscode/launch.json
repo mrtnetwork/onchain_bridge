@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "webLDLD",
+            "name": "chrome",
             "request": "launch",
             "type": "dart",
             "args": [
@@ -17,7 +17,7 @@
         {
             "name": "flutter_demo",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
         },
         {
             "name": "flutter_demo (profile mode)",

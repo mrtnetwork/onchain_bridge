@@ -1,10 +1,12 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_bridge/exception/exception.dart';
 import 'package:on_chain_bridge/models/models.dart';
 
 enum PickFileContentEncoding { utf8, hex, bytes }
 
 enum AppFileType {
-  txt(extension: "txt", mimeType: "text/plain");
+  txt(extension: "txt", mimeType: "text/plain"),
+  imagePng(extension: "png", mimeType: "image/png");
 
   final String mimeType;
   final String extension;
@@ -28,7 +30,7 @@ enum AppFileType {
     }
   }
 
-  String toFileName(String name, AppPlatform platform) {
+  String toFileName(String name) {
     final ext = name.split(".").last;
     if (ext == extension) return name;
     return "$name.$extension";
@@ -42,4 +44,10 @@ class PickedFileContent {
   PickedFileContent(
       {required this.name, required List<int> data, required this.path})
       : data = data.asImmutableBytes;
+}
+
+abstract class ICrossFile {
+  String get name;
+  Future<Result<List<int>, BaseOnChainBridgeException>> readBytes();
+  Future<Result<String, BaseOnChainBridgeException>> readString();
 }

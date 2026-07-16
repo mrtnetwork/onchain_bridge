@@ -58,6 +58,13 @@ ChromeAPI get extension {
   return _browser;
 }
 
+ChromeAPI? get extensionOrNull {
+  if (_chromeNullabe?.runtimeNullable?.idNullabe != null) {
+    return _chrome;
+  }
+  return _browserNullabe;
+}
+
 bool get isMozila => _browserNullabe != null;
 
 bool get isExtension =>

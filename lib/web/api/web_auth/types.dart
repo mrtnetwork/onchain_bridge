@@ -1,6 +1,6 @@
 import 'dart:js_interop';
-import 'dart:typed_data';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_bridge/web/utils/utils.dart';
 import 'package:on_chain_bridge/web/api/window/window.dart';
 
 class _WebAuthConstants {
@@ -129,13 +129,13 @@ extension type CredentialsContainer._(JSObject _) implements JSAny {
             rp: RP(id: rpId.toJS, name: rpName.toJS),
             user: User(
                 displayName: displayName.toJS,
-                id: Uint8List.fromList(id).toJS,
+                id: JsUtils.toJsUint8Array(id),
                 name: name.toJS),
             authenticatorSelection: Authenticatorselection(
               authenticatorAttachment:
                   Authenticatorattachment.platform.name.toJS,
             ),
-            challenge: Uint8List.fromList(QuickCrypto.generateRandom()).toJS,
+            challenge: JsUtils.toJsUint8Array(QuickCrypto.generateRandom()),
             pubKeyCredParams: [
               PubKeyCredParams(
                   type: _WebAuthConstants.pkType.toJS,
@@ -160,11 +160,11 @@ extension type CredentialsContainer._(JSObject _) implements JSAny {
           GetCredentialsParams(
             mediation: Mediation.required.name.toJS,
             publicKey: PublicKeyCredentialRequestOptions(
-              challenge: Uint8List.fromList(challenge).toJS,
+              challenge: JsUtils.toJsUint8Array(challenge),
               userVerification: Userverification.required.name.toJS,
               allowCredentials: [
                 Excludecredentials(
-                    id: Uint8List.fromList(id).toJS, type: "public-key".toJS),
+                    id: JsUtils.toJsUint8Array(id), type: "public-key".toJS),
               ].toJS,
             ),
           ),
@@ -176,7 +176,7 @@ extension type CredentialsContainer._(JSObject _) implements JSAny {
             id,
             StringUtils.encode(auth.id.toDart,
                 validateB64Padding: false,
-                type: StringEncoding.base64UrlSafe,
+                encoding: StringEncoding.base64UrlSafe,
                 allowUrlSafe: true))) {
       return auth;
     }

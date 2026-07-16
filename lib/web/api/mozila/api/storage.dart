@@ -18,7 +18,6 @@ extension type LocalStorage._(JSObject _) implements JSAny {
   @JS("removeItem")
   external void removeItem(String keyName);
 
-  /// An integer representing the number of the key you want to get the name of. This is a zero-based index.
   @JS("key")
   external String? key(int index);
 

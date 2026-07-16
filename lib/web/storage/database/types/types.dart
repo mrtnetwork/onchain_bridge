@@ -10,16 +10,18 @@ extension type IDatabaseTableJSStructAScheme._(JSObject _) implements JSAny {
     required int storageId,
     required String key,
     required String keyA,
-    required List<int> data,
+    required List<int>? data,
     required int createdAt,
+    required int updateAt,
   }) {
     final obj = IDatabaseTableJSStructAScheme._(JSObject())
       ..storage = storage
       ..storageId = storageId
       ..key = key
       ..keyA = keyA
-      ..data = data.map((e) => e.toJS).toList().toJS
-      ..createdAt = createdAt;
+      ..data = data?.map((e) => e.toJS).toList().toJS
+      ..createdAt = createdAt
+      ..updateAt = updateAt;
     return obj;
   }
   external int? get id;
@@ -36,20 +38,25 @@ extension type IDatabaseTableJSStructAScheme._(JSObject _) implements JSAny {
   external String get keyA;
   @JS("key_a")
   external set keyA(String _);
-  external JSArray<JSNumber> get data;
-  external set data(JSArray<JSNumber> _);
+  external JSArray<JSNumber>? get data;
+  external set data(JSArray<JSNumber>? _);
   external int get createdAt;
-  external set createdAt(int _);
+  external set createdAt(int? _);
+
+  external int? get updateAt;
+  external set updateAt(int? _);
   ITableDataStructA? toData(String tableName) {
     try {
-      final data = (this.data).toDart;
+      final data = (this.data)?.toDart;
       return ITableDataStructA(
           storage: storage,
           storageId: storageId,
           id: id!,
           key: key,
           keyA: keyA,
-          data: data.map((e) => e.toDartInt).toList(),
+          data: data?.map((e) => e.toDartInt).toList(),
+          updatedAt: updateAt ?? 0,
+          createdAt: createdAt,
           tableName: tableName);
     } catch (_) {
       return null;

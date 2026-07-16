@@ -5,3 +5,7 @@ export 'path/path.dart';
 export 'share/share.dart';
 export 'size/size.dart';
 export 'files/picked_file_data.dart';
+export 'config/config.dart';
+export 'web/types.dart';
+export 'biometric/types.dart';
+export 'buffer/buffer.dart';

@@ -39,9 +39,9 @@ extension type JSWalletEvent._(JSObject o) implements JSOBJ {
     };
   }
 
-  WalletEvent? toEvent() {
+  JSWalletEventDart? toEvent() {
     try {
-      return WalletEvent(
+      return JSWalletEventDart(
           clientId: clientId!,
           data: data_,
           requestId: requestId!,
@@ -55,7 +55,7 @@ extension type JSWalletEvent._(JSObject o) implements JSOBJ {
   }
 }
 
-extension ToJsEvent on WalletEvent {
+extension ToJsEvent on JSWalletEventDart {
   JSWalletEvent toJsEvent() {
     return JSWalletEvent(
         data: data.map((e) => e.toJS).toList().toJS,

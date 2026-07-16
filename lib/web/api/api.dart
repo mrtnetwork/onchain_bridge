@@ -6,3 +6,5 @@ export 'window/websocket.dart';
 export 'window/html.dart';
 export 'core/js.dart';
 export 'web_auth/types.dart';
+export 'window/fetch.dart';
+export 'window/channel.dart';

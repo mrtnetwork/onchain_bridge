@@ -13,14 +13,13 @@ enum WalletEventTypes {
 
   static WalletEventTypes fromName(String name) {
     return values.firstWhere((e) => e.name == name,
-        orElse: () =>
-            throw OnChainBridgeException("Invalid wallet event type $name"));
+        orElse: () => throw OnChainBridgeException.unexpectedError);
   }
 }
 
 enum WalletEventTarget { wallet, background, external }
 
-class WalletEvent {
+class JSWalletEventDart {
   final WalletEventTarget target;
   final String clientId;
   final List<int> data;
@@ -29,7 +28,7 @@ class WalletEvent {
   final String? additional;
   final String? platform;
 
-  WalletEvent copyWith({
+  JSWalletEventDart copyWith({
     String? clientId,
     List<int>? data,
     String? requestId,
@@ -38,7 +37,7 @@ class WalletEvent {
     String? platform,
     WalletEventTarget? target,
   }) {
-    return WalletEvent(
+    return JSWalletEventDart(
         clientId: clientId ?? this.clientId,
         data: data ?? this.data,
         requestId: requestId ?? this.requestId,
@@ -48,7 +47,7 @@ class WalletEvent {
         target: target ?? this.target);
   }
 
-  WalletEvent(
+  JSWalletEventDart(
       {this.clientId = "",
       List<int> data = const [],
       this.requestId = "",
@@ -57,9 +56,9 @@ class WalletEvent {
       this.additional,
       this.platform})
       : data = List<int>.unmodifiable(data);
-  factory WalletEvent.fromJson(
+  factory JSWalletEventDart.fromJson(
       Map<String, dynamic> json, WalletEventTarget target) {
-    return WalletEvent(
+    return JSWalletEventDart(
         clientId: json["client_id"],
         data: List<int>.from(json["data"]),
         requestId: json["request_id"],

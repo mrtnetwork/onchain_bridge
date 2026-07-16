@@ -1,5 +1,3 @@
-import 'package:on_chain_bridge/exception/exception.dart';
-
 enum AppPlatform {
   windows,
   web,
@@ -8,16 +6,22 @@ enum AppPlatform {
   macos,
   linux;
 
-  bool get isDesktop =>
-      this == AppPlatform.windows ||
-      this == AppPlatform.macos ||
-      this == AppPlatform.linux;
+  bool get isDesktop => this == windows || this == macos || this == linux;
+  bool get isWeb => this == web;
+  bool get isWindows => this == windows;
+  bool get isLinux => this == linux;
+  bool get isAndroid => this == android;
+  bool get isMacos => this == macos;
+}
 
-  static AppPlatform fromName(String? name) {
-    return values.firstWhere(
-      (e) => e.name == name,
-      orElse: () =>
-          throw const OnChainBridgeException("Invalid platform name."),
-    );
-  }
+enum AppEnvironment {
+  web,
+  native;
+
+  bool get isNative => this == native;
+  bool get isWeb => this == web;
+  // AppEnvironment get currentEnvironment =>
+  //   const bool.fromEnvironment('dart.library.js_interop')
+  //       ? AppEnvironment.web
+  //       : AppEnvironment.native;
 }

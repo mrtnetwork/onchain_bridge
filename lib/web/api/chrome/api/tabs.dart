@@ -141,7 +141,7 @@ extension type Tabs._(JSObject _) {
     return result.toDart;
   }
 
-  Future<WalletEvent?> sendMessage_(
+  Future<JSWalletEventDart?> sendMessage_(
       {required int tabId,
       required JSWalletEvent message,
       TabSendMessageOptions? option}) async {

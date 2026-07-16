@@ -8,7 +8,7 @@ enum TouchIdStatus {
 
   static TouchIdStatus fromName(String? v) {
     return values.firstWhere((e) => e.name == v,
-        orElse: () => throw OnChainBridgeException("Invalid touch id status."));
+        orElse: () => throw OnChainBridgeException.unexpectedError);
   }
 }
 
@@ -21,12 +21,11 @@ enum BiometricResult {
 
   static BiometricResult fromName(String? v) {
     return values.firstWhere((e) => e.name == v,
-        orElse: () =>
-            throw OnChainBridgeException("Invalid biometric result."));
+        orElse: () => throw OnChainBridgeException.unexpectedError);
   }
 }
 
-class PlatformCredentialRequest {
+final class PlatformCredentialRequest {
   final String appName;
   final String name;
   final String displayName;
@@ -51,17 +50,17 @@ class PlatformCredentialWebResponse implements PlatformCredentialResponse {
       {required this.id, required this.publicKey});
 }
 
-abstract class PlatformCredentialResponse {}
+sealed class PlatformCredentialResponse {}
 
 class PlatformCredentialIoResponse implements PlatformCredentialResponse {}
 
-abstract class PlatformCredentialAutneticateRequest<T> {
+sealed class PlatformCredentialAutneticateRequest<T> {
   final String? title;
   final String? buttonTitle;
   final String reason;
   const PlatformCredentialAutneticateRequest(
       {this.title, this.buttonTitle, required this.reason});
-  Future<BiometricResult> verify(T response);
+  Future<Result<BiometricResult, IException>> verify(T response);
 }
 
 class PlatformCredentialAutneticateIoRequest
@@ -70,8 +69,9 @@ class PlatformCredentialAutneticateIoRequest
       {required super.reason, super.buttonTitle, super.title});
 
   @override
-  Future<BiometricResult> verify(BiometricResult response) async {
-    return response;
+  Future<Result<BiometricResult, IException>> verify(
+      BiometricResult response) async {
+    return Ok(response);
   }
 }
 
@@ -102,8 +102,8 @@ class PlatformCredentialAutneticateWebRequest
   final List<int> id;
   final List<int> challange;
   @override
-  Future<BiometricResult> verify(
+  Future<Result<BiometricResult, IException>> verify(
       InternalPublicKeyWebAuthResponse response) async {
-    return BiometricResult.success;
+    return Ok(BiometricResult.success);
   }
 }

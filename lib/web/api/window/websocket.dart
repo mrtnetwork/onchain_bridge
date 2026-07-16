@@ -1,5 +1,5 @@
 import 'dart:js_interop';
-import 'dart:typed_data' show Uint8List;
+import 'package:on_chain_bridge/web/utils/utils.dart';
 import 'window.dart';
 
 @JS("WebSocket")
@@ -23,7 +23,7 @@ extension type JSWebSocket._(JSObject _) implements JSObject, WebEventStream {
   bool get isClosed => readyState == 3;
 
   void send_(List<int> bytes) {
-    final data = Uint8List.fromList(bytes).buffer.toJS;
+    final data = JsUtils.toUint8Array(bytes).buffer.toJS;
     send(data);
   }
 }
@@ -33,6 +33,6 @@ extension type JSWebScoketCloseEvent._(JSObject _) implements JSAny {
   external bool? get wasClean;
 }
 extension type JSWebScoketMessageEvent._(JSObject _)
-    implements MessageEvent<JSString> {
-  external JSString get data;
+    implements MessageEvent<JSAny> {
+  external JSAny get data;
 }

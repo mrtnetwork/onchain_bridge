@@ -50,7 +50,7 @@ class SafestorageUtils {
 abstract class SafeStorage {
   final ChaCha20Poly1305 _chacha;
   const SafeStorage(this._chacha);
-  static Future<SafeStorage> init() async {
+  static Future<SafeStorage> init() {
     if (isExtension) {
       return ChromeStorage.init();
     }

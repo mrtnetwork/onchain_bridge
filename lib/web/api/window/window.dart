@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
+import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_bridge/exception/exception.dart';
 import 'package:on_chain_bridge/web/api/chrome/chrome.dart';
+import 'package:on_chain_bridge/web/utils/utils.dart';
 import 'package:on_chain_bridge/web/api/web_auth/types.dart';
-
 import 'html.dart';
 import 'media_stream.dart';
-// import '../chrome/api/core.dart';
+import 'channel.dart';
 
 @JS("cloneInto")
 external T _cloneInto<T extends JSAny>(T? object, JSAny? where);
@@ -36,6 +37,8 @@ extension type Window._(JSObject _) implements WebEventStream {
   external URL get url;
   @JS("document")
   external Document get document;
+  @JS("document")
+  external Document? get documentOrNull;
   @JS("location")
   external Location get location;
 
@@ -45,7 +48,9 @@ extension type Window._(JSObject _) implements WebEventStream {
   external JSAny? open(String? url, String? target, String? windowFeatures);
   @JS("fetch")
   external JSPromise<Response> fetch(String resource);
-
+  @JS("fetch")
+  external JSPromise<Response> fetchWithOption(
+      String resource, FetchOptions? options);
   @JS("webkit")
   external WebKit get webkit;
 
@@ -53,12 +58,6 @@ extension type Window._(JSObject _) implements WebEventStream {
   external void postMessage(JSAny? message);
   @JS("focus")
   external void focus();
-
-  Future<Response> fetch_(String url) async {
-    final future = fetch(url);
-    final result = await future.toDart;
-    return result;
-  }
 
   external set ononline(JSFunction _);
   external set onoffline(JSFunction _);
@@ -106,10 +105,15 @@ extension type Document._(JSObject _) implements JSObject, WebEventStream {
     return createElement(type);
   }
 
-  String downloadFile(
+  String downloadBlob(
       {required List<int> fileBytes, required String fileName}) {
     final blob = Blob.fromBytes(fileBytes);
     final url = URL.createObjectURL(blob);
+    downloadUrl(url: url, fileName: fileName);
+    return url;
+  }
+
+  void downloadUrl({required String url, required String fileName}) {
     final HTMLAnchorElement anchor = createElement("a");
     anchor.target = "download";
     anchor.href = url;
@@ -117,20 +121,27 @@ extension type Document._(JSObject _) implements JSObject, WebEventStream {
     jsWindow.document.body.appendChild(anchor);
     anchor.click();
     jsWindow.document.body.removeChild(anchor);
+  }
+
+  String downloadJsFile({required JSFile file, required String fileName}) {
+    // final blob = Blob.fromBytes(fileBytes);
+    final url = URL.createObjectURLFromFile(file);
+    downloadUrl(url: url, fileName: fileName);
     return url;
   }
 
-  Future<JSFile?> readFileContent(List<String> extensions) async {
-    Completer<JSFile?>? completer = Completer();
+  Future<Result<JSFile?, OnChainBridgeException>> pickFile(
+      List<String> extensions) async {
+    Completer<Result<JSFile?, OnChainBridgeException>> completer = Completer();
     final HTMLInputElement anchor = createElement("input");
     void compelete(JSFile? data) {
-      completer?.complete(data);
-      completer = null;
+      if (completer.isCompleted) return;
+      completer.complete(Ok(data));
     }
 
     void error() {
-      completer?.completeError(OnChainBridgeException.failedToReadFileContent);
-      completer = null;
+      if (completer.isCompleted) return;
+      completer.complete(Err(OnChainBridgeException.invalidFileData));
     }
 
     anchor.onchange = () {
@@ -160,7 +171,7 @@ extension type Document._(JSObject _) implements JSObject, WebEventStream {
     jsWindow.document.body.appendChild(anchor);
     anchor.click();
     jsWindow.document.body.removeChild(anchor);
-    final data = await completer?.future;
+    final data = await completer.future;
     return data;
   }
 }
@@ -245,7 +256,7 @@ extension type JSNavigator._(JSObject _) implements JSObject {
 
   /// navigator.clipboard.writeText(text)
   Future<void> share_({
-    required List<JSFile> files,
+    List<JSFile> files = const [],
     String? url,
     String? text,
     String? title,
@@ -280,18 +291,18 @@ extension type BarcodeDetector._(JSObject _) implements JSObject {
   external JSPromise<JSArray<DetectedBarcode>> detect(
       HTMLVideoElement imageBitmapSource);
   Stream<String> stream(HTMLVideoElement element,
-      {Duration interval = const Duration(milliseconds: 300)}) async* {
-    yield* Stream.periodic(interval)
-        .asyncMap((_) async {
-          final future = (await detect(element).toDart).toDart;
-          if (future.isNotEmpty && future.first.rawValue != null) {
-            return future.first.rawValue!;
-          }
-          return null;
-        })
-        .where((event) => event != null)
-        .cast<String>();
-  }
+          {Duration interval = const Duration(milliseconds: 300)}) =>
+      Stream.periodic(interval)
+          .asyncMap((_) async {
+            final future = (await detect(element).toDart).toDart;
+            final value = future.firstOrNull?.rawValue;
+            if (value != null) {
+              return value;
+            }
+            return null;
+          })
+          .where((event) => event != null)
+          .cast<String>();
 }
 @JS()
 extension type BarcodeDetectorOptions._(JSObject _) implements JSObject {
@@ -323,7 +334,7 @@ extension type JSFileOption._(JSObject _) implements JSObject {
 @JS("File")
 extension type JSFile._(JSObject _) implements JSObject {
   external JSFile(
-      JSArray<JSArrayBuffer> fileBits, String fileName, JSFileOption? options);
+      JSArray<JSAny> fileBits, String fileName, JSFileOption? options);
   external JSArray<JSArrayBuffer>? get fileBits;
   // external String? get fileName;
   external String get name;
@@ -331,14 +342,23 @@ extension type JSFile._(JSObject _) implements JSObject {
   external JSPromise<JSArrayBuffer> arrayBuffer();
   external JSPromise<JSString> text();
 
-  Future<List<int>> toBytes() async {
-    final bytes = await arrayBuffer().toDart;
-    return bytes.toDart.asUint8List().toList();
+  Future<Result<List<int>, OnChainBridgeException>> toBytes() async {
+    try {
+      final bytes = await arrayBuffer().toDart;
+      final content = bytes.toDart.asUint8List().toList();
+      return Ok(content);
+    } catch (_) {
+      return Err(OnChainBridgeException.invalidFileData);
+    }
   }
 
-  Future<String> toText() async {
-    final bytes = await text().toDart;
-    return bytes.toDart;
+  Future<Result<String, OnChainBridgeException>> toText() async {
+    try {
+      final bytes = await text().toDart;
+      return Ok(bytes.toDart);
+    } catch (_) {
+      return Err(OnChainBridgeException.invalidFileData);
+    }
   }
 }
 @JS("FileList")
@@ -352,7 +372,7 @@ extension type FileList._(JSObject _) implements JSObject {
 extension type Blob._(JSObject _) implements JSObject {
   external factory Blob(JSArray<JSAny> blobParts, BlobOptions? options);
   factory Blob.fromBytes(List<int> bytes, {BlobOptions? options}) {
-    final data = Uint8List.fromList(bytes).buffer.toJS;
+    final data = JsUtils.toUint8Array(bytes).buffer.toJS;
     return Blob([data].toJS, options);
   }
   external JSAny? get blobParts;
@@ -364,16 +384,32 @@ extension type Blob._(JSObject _) implements JSObject {
 extension type BlobOptions._(JSObject _) implements JSAny {
   external factory BlobOptions({String? type});
 }
-@JS("Response")
-extension type Response._(JSObject _) implements JSObject {
-  external factory Response();
 
-  @JS("ok")
+@JS('ReadableStream')
+extension type ReadableStream._(JSObject _) implements JSObject {
+  external ReadableStreamDefaultReader getReader();
+}
+
+@JS('ReadableStreamDefaultReader')
+extension type ReadableStreamDefaultReader._(JSObject _) implements JSObject {
+  external JSPromise<ReadableStreamReadResult> read();
+  external void cancel();
+  external void releaseLock();
+}
+
+extension type ReadableStreamReadResult._(JSObject _) implements JSObject {
+  external bool get done;
+  external JSUint8Array? get value;
+}
+
+@JS('Response')
+extension type Response._(JSObject _) implements JSObject {
   external bool get ok;
-  @JS("status")
   external int get status;
-  @JS("arrayBuffer")
+  external Headers get headers;
+  external ReadableStream? get body;
   external JSPromise<JSArrayBuffer> arrayBuffer();
+
   @JS("text")
   external JSPromise<JSString> text();
 
@@ -386,23 +422,48 @@ extension type Response._(JSObject _) implements JSObject {
     final data = await text().toDart;
     return data.toDart;
   }
+
+  // Future<Uint8List> arrayBuffer_() async {
+  //   final buffer = await arrayBuffer().toDart;
+  //   return buffer.toDart.asUint8List();
+  // }
 }
+// @JS("Response")
+// extension type Response._(JSObject _) implements JSObject {
+//   external factory Response();
+
+//   @JS("ok")
+//   external bool get ok;
+//   @JS("status")
+//   external int get status;
+//   @JS("arrayBuffer")
+//   external JSPromise<JSArrayBuffer> arrayBuffer();
+//   @JS("text")
+//   external JSPromise<JSString> text();
+
+//   Future<ByteBuffer> arrayBuffer_() async {
+//     final data = await arrayBuffer().toDart;
+//     return data.toDart;
+//   }
+
+//   Future<String> text_() async {
+//     final data = await text().toDart;
+//     return data.toDart;
+//   }
+// }
+
 @JS("Worker")
-extension type Worker._(JSObject _) implements JSObject, WebEventStream {
+extension type Worker._(JSObject _)
+    implements JSObject, WebEventStream, IJSMessagePort {
   external factory Worker(String? aURL, WorkerOptions? options);
   external String? get aURL;
   external WorkerOptions? get options;
-  @JS("addEventListener")
-  external void addEventListener(String type, JSFunction callback);
-  @JS("removeEventListener")
-  external void removeEventListener(String type, JSFunction callback);
-  external void postMessage(JSAny message);
-  @JS("postMessage")
-  external void postMessage_<T extends Object>(
-      ExternalDartReference<T> message);
-
   @JS("terminate")
   external void terminate();
+
+  external set onerror(JSFunction _);
+
+  external set onmessage(JSFunction? _);
 }
 extension type WorkerOptions._(JSObject _) implements JSObject {
   external factory WorkerOptions(
@@ -415,6 +476,7 @@ extension type WorkerOptions._(JSObject _) implements JSObject {
   external String? get name;
   external set name(String? type);
 }
+
 @JS("Event")
 extension type WebEvent<TARGET extends JSAny?>._(JSObject _)
     implements EventInit<TARGET> {
@@ -442,13 +504,10 @@ extension type EventInit<TARGET extends JSAny?>._(JSObject _)
       JSAny? data});
 
   List<int>? detailBytes() {
-    try {
-      return List<int>.from(detail.dartify() as List);
-    } catch (e) {
-      return null;
-    }
+    return JsUtils.toDartBytes(detail);
   }
 }
+
 @JS("Event")
 extension type MessageEvent<T extends JSAny?>._(JSObject _)
     implements WebEvent {
@@ -463,43 +522,22 @@ extension type WebEventStream._(JSObject _) {
 
   external void dispatchEvent(WebEvent event);
 
-  Stream<T> stream<T>(String type) {
-    final StreamController<T> controller = StreamController();
-    final callback = (MessageEvent<JSAny?> event) {
+  ({Stream<T> stream, StreamController<T> controller})
+      stream<T extends JSObject?>(String type, {bool broadcast = false}) {
+    final StreamController<T> controller = switch (broadcast) {
+      false => StreamController(),
+      true => StreamController.broadcast()
+    };
+    final callback = (MessageEvent<JSObject?> event) {
       controller.add(event.data.dartify() as T);
     }.toJS;
     controller.onCancel = () {
       removeEventListener(type, callback);
     };
-    addEventListener(type, callback);
-
-    return controller.stream;
-  }
-
-  Stream<T> streamOnCustomEvent<T extends JSAny>(String type) {
-    final StreamController<T> controller = StreamController();
-    final callback = (CustomEvent event) {
-      controller.add(event.detail as T);
-    }.toJS;
-    controller.onCancel = () {
-      removeEventListener(type, callback);
+    controller.onListen = () {
+      addEventListener(type, callback);
     };
-    addEventListener(type, callback);
-
-    return controller.stream;
-  }
-
-  Stream<T> streamObject<T extends JSAny>(String type) {
-    final StreamController<T> controller = StreamController();
-    final callback = (JSAny content) {
-      controller.add(content as T);
-    }.toJS;
-    controller.onCancel = () {
-      removeEventListener(type, callback);
-    };
-    addEventListener(type, callback);
-
-    return controller.stream;
+    return (stream: controller.stream, controller: controller);
   }
 }
 
@@ -570,4 +608,44 @@ extension type Reflect._(JSObject _) implements JSAny {
     if (object.isUndefinedOrNull) return [];
     return ownKeys(object).toDart.map((e) => e.toDart).toList();
   }
+}
+// extension type FetchOptions._(JSObject _) implements JSAny {
+//   external FetchOptions({JSString? method, JSAny? headers, JSAny? body});
+// external set method(JSString _);
+// external set headers(JSAny? _);
+// external set body(JSAny? _);
+// }
+extension type FetchOptions._(JSObject _) implements JSObject {
+  external factory FetchOptions({
+    String? method,
+    Headers? headers,
+    JSAny? body,
+    AbortSignal? signal,
+  });
+  external set method(JSString _);
+  external set headers(Headers? _);
+  external set body(JSAny? _);
+}
+@JS('Headers')
+extension type Headers._(JSObject _) implements JSObject {
+  external factory Headers();
+  external void append(String name, String value);
+  external void forEach(JSFunction callback);
+}
+
+@JS("ErrorEvent")
+extension type ErrorEvent._(JSObject _) implements WebEvent {
+  external factory ErrorEvent(String? type, EventInit? options);
+  external String? get message;
+}
+@JS('AbortController')
+extension type AbortController._(JSObject _) implements JSObject {
+  external factory AbortController();
+  external AbortSignal get signal;
+  external void abort();
+}
+
+@JS('AbortSignal')
+extension type AbortSignal._(JSObject _) implements JSObject {
+  external bool get aborted;
 }

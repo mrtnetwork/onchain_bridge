@@ -1,6 +1,6 @@
 import 'package:on_chain_bridge/models/size/models/rect.dart';
 
-abstract class BarcodeScannerParams {
+sealed class BarcodeScannerParams {
   Map<String, dynamic> toJson();
 }
 

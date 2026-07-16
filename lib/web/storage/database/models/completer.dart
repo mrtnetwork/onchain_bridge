@@ -3,9 +3,9 @@ import 'dart:js_interop';
 
 import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain_bridge/web/api/window/indexed_db.dart';
-import 'package:on_chain_bridge/web/storage/database/constants/constants.dart';
 import 'package:on_chain_bridge/web/web.dart';
 
+typedef ONREQUESTRESULT<T extends JSAny?, R> = R Function(T r);
 typedef ONUPGRADENEEDED<T extends IDBDatabase?> = void Function(T);
 
 class IDBOpenDBRequestCompleter<T extends IDBDatabase?> {
@@ -22,10 +22,10 @@ class IDBOpenDBRequestCompleter<T extends IDBDatabase?> {
       onUpgradeNeeded(result);
     }.toJS;
     request.onblocked = (IDBVersionChangeEvent _) {
-      completer.completeError(IDatabaseJSConstants.onDatabaseBlockError);
+      completer.completeError(IDatabaseException.onDatabaseBlockError);
     }.toJS;
     request.onerror = () {
-      completer.completeError(IDatabaseException(
+      completer.completeError(IDatabaseException.unexpected(
         "Failed to open the IndexedDB database. Check browser support or permissions.",
       ));
     }.toJS;
@@ -41,8 +41,6 @@ class IDBOpenDBRequestCompleter<T extends IDBDatabase?> {
   Future<T> get wait => completer.future;
 }
 
-typedef ONREQUESTRESULT<T extends JSAny?, R> = R Function(T r);
-
 class IDBRequestCompleter<T extends JSAny?, R extends Object?> {
   final Completer<R> completer;
   final IDBRequest<T> request;
@@ -52,7 +50,7 @@ class IDBRequestCompleter<T extends JSAny?, R extends Object?> {
       required ONREQUESTRESULT<T, R> onResult}) {
     final Completer<R> completer = Completer<R>();
     request.onerror = () {
-      completer.completeError(IDatabaseException(
+      completer.completeError(IDatabaseException.unexpected(
           "IndexedDB error: the database operation failed."));
     }.toJS;
     request.onsuccess = (WebEvent<IDBRequest<T>> event) {

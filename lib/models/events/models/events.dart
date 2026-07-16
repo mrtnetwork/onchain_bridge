@@ -6,12 +6,11 @@ enum AppNativeEventType {
 
   static AppNativeEventType fromName(String? name) {
     return values.firstWhere((e) => e.name == name,
-        orElse: () =>
-            throw OnChainBridgeException("Invalid app native event."));
+        orElse: () => throw OnChainBridgeException.unexpectedError);
   }
 }
 
-abstract final class AppNativeEvent {
+sealed class AppNativeEvent {
   final AppNativeEventType type;
   const AppNativeEvent(this.type);
   factory AppNativeEvent.fromJson(Map<String, dynamic> json) {
@@ -23,7 +22,7 @@ abstract final class AppNativeEvent {
   }
 }
 
-final class AppNativeEventConnection extends AppNativeEvent {
+class AppNativeEventConnection extends AppNativeEvent {
   const AppNativeEventConnection(this.isOnline)
       : super(AppNativeEventType.internet);
   factory AppNativeEventConnection.fromJson(Map<String, dynamic> json) {
@@ -32,7 +31,7 @@ final class AppNativeEventConnection extends AppNativeEvent {
   final bool isOnline;
 }
 
-final class AppNativeEventDeeplink extends AppNativeEvent {
+class AppNativeEventDeeplink extends AppNativeEvent {
   const AppNativeEventDeeplink(this.url) : super(AppNativeEventType.deeplink);
   final String url;
   factory AppNativeEventDeeplink.fromJson(Map<String, dynamic> json) {

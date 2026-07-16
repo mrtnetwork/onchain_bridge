@@ -18,12 +18,18 @@ abstract class IDtabaseTableJS<
     implements IDatabaseTable<IDatabaseJS, W, DATA, R, RE, DR> {
   void create(IDBDatabase db);
 
-  Future<DATA?> read(IDatabaseJS db, R query);
-  Future<bool> remove(IDatabaseJS db, RE query);
-  Future<bool> write(IDatabaseJS db, W data);
-  Future<List<DATA>> readAll(IDatabaseJS db, R query);
-  Future<bool> writeAll(IDatabaseJS db, List<W> data);
-  Future<bool> removeAll(IDatabaseJS db, List<RE> queries);
+  Future<DATA?> read(IDBDatabase db, R query);
+  Future<void> remove(IDBDatabase db, RE query);
+  Future<void> write(IDBDatabase db, W data);
+  Future<List<DATA>> readAll(IDBDatabase db, R query);
+  Future<void> writeAll(IDBDatabase db, List<W> data);
+  Future<void> removeAll(IDBDatabase db, List<RE> queries);
+
+  ///
+  ///
+  Future<void> removeData(IDBDatabase db, RE query);
+  Future<void> removeAllData(IDBDatabase db, List<RE> queries);
+  Future<void> clearNullableColumn(IDBDatabase db, RE query);
 }
 
 class IDatabaseTableJSStructA
@@ -36,19 +42,22 @@ class IDatabaseTableJSStructA
   const IDatabaseTableJSStructA(this.tableName);
 
   Future<List<ITableDataStructA>> _execute(
-      {required IDatabaseJS db,
+      {required IDBDatabase db,
       IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc,
       bool remove = false,
+      bool removeNullabeData = false,
       int? storage,
       int? storageId,
       String? key,
       String? keyA,
       int? createdAtLt,
       int? createdAtGt,
+      int? updatedAtLt,
+      int? updatedAtGt,
       int? limit,
       int? offset}) async {
-    final transaction = db.db
-        .transaction([tableName.toJS].toJS, IndexDbStorageMode.readwrite.name);
+    final transaction = db.transaction(
+        [tableName.toJS].toJS, IndexDbStorageMode.readwrite.name);
     final store = transaction.objectStore(tableName);
     IDBIndex? index;
     if (storage != null && storageId != null && key != null && keyA != null) {
@@ -93,7 +102,7 @@ class IDatabaseTableJSStructA
     }
     final Completer completer = Completer();
     request.onerror = () {
-      completer.completeError(IDatabaseException(
+      completer.completeError(IDatabaseException.unexpected(
           "IndexedDB error: the database operation failed."));
     }.toJS;
     // final request = ;
@@ -116,11 +125,14 @@ class IDatabaseTableJSStructA
 
       final value = cursor.value;
       if ((storage != null && storage != value.storage) ||
+          (removeNullabeData && value.data != null) ||
           (storageId != null && storageId != value.storageId) ||
           (key != null && key != value.key) ||
           (keyA != null && keyA != value.keyA) ||
           (createdAtLt != null && value.createdAt >= createdAtLt) ||
-          (createdAtGt != null && value.createdAt <= createdAtGt)) {
+          (createdAtGt != null && value.createdAt <= createdAtGt) ||
+          (updatedAtLt != null && (value.updateAt ?? 0) >= updatedAtLt) ||
+          (updatedAtGt != null && (value.updateAt ?? 0) <= updatedAtGt)) {
         cursor.continue_();
         return;
       }
@@ -150,7 +162,7 @@ class IDatabaseTableJSStructA
 
   @override
   Future<ITableDataStructA?> read(
-      IDatabaseJS db, ITableReadStructA query) async {
+      IDBDatabase db, ITableReadStructA query) async {
     final result = await _execute(
         db: db,
         ordering: query.ordering,
@@ -162,13 +174,15 @@ class IDatabaseTableJSStructA
         offset: null,
         remove: false,
         storage: query.storage,
-        storageId: query.storageId);
+        storageId: query.storageId,
+        updatedAtGt: query.updatedAtGt,
+        updatedAtLt: query.updatedAtLt);
     return result.firstOrNull;
   }
 
   @override
   Future<List<ITableDataStructA>> readAll(
-      IDatabaseJS db, ITableReadStructA query) async {
+      IDBDatabase db, ITableReadStructA query) async {
     return await _execute(
         db: db,
         ordering: query.ordering,
@@ -180,11 +194,21 @@ class IDatabaseTableJSStructA
         offset: query.offset,
         remove: false,
         storage: query.storage,
-        storageId: query.storageId);
+        storageId: query.storageId,
+        updatedAtGt: query.updatedAtGt,
+        updatedAtLt: query.updatedAtLt);
+  }
+
+  IDatabaseTableJsTransaction getStore(IDBDatabase database,
+      {IndexDbStorageMode mode = IndexDbStorageMode.readwrite}) {
+    final transaction = database.transaction([tableName.toJS].toJS, mode.name);
+    final store = transaction.objectStore(tableName);
+
+    return IDatabaseTableJsTransaction(transaction: transaction, store: store);
   }
 
   @override
-  Future<bool> remove(IDatabaseJS db, ITableRemoveStructA query,
+  Future<void> remove(IDBDatabase db, ITableRemoveStructA query,
       {IDatabaseTableJsTransaction? store}) async {
     await _execute(
         db: db,
@@ -193,23 +217,23 @@ class IDatabaseTableJSStructA
         storage: query.storage,
         storageId: query.storageId,
         remove: true);
-    return true;
   }
 
   @override
-  Future<bool> removeAll(
-      IDatabaseJS db, List<ITableRemoveStructA> queries) async {
-    final store = db.getStore(this);
+  Future<void> removeAll(
+      IDBDatabase db, List<ITableRemoveStructA> queries) async {
+    final store = getStore(db);
     for (final i in queries) {
       await remove(db, i, store: store);
     }
-    return true;
   }
 
-  @override
-  Future<bool> write(IDatabaseJS db, ITableInsertOrUpdateStructA data,
-      {IDatabaseTableJsTransaction? store}) async {
-    store ??= db.getStore(this);
+  Future<void> _write({
+    required IDBDatabase db,
+    IDatabaseTableJsTransaction? store,
+    required _ITableInsertOrUpdateStructA data,
+  }) async {
+    store ??= getStore(db);
     final index = store.store.index("unique_index");
     final request = index.getObject<IDatabaseTableJSStructAScheme?>([
       data.storage.toJS,
@@ -227,9 +251,11 @@ class IDatabaseTableJSStructA
             keyA: data.keyA ?? '',
             createdAt:
                 IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
-            data: data.data);
+            data: data.data,
+            updateAt: IDatabaseUtils.createOrConvertDateTimeSecound());
         if (r.id != null) {
-          r.data = data.data.map((e) => e.toJS).toList().toJS;
+          r.data = data.data?.map((e) => e.toJS).toList().toJS;
+          r.updateAt = IDatabaseUtils.createOrConvertDateTimeSecound();
           final request = store!.store.put<JSNumber>(r);
           return IDBRequestCompleter(request: request, onResult: (r) => null);
           // await completer.wait;
@@ -241,6 +267,7 @@ class IDatabaseTableJSStructA
               keyA: data.keyA ?? '',
               createdAt:
                   IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
+              updateAt: IDatabaseUtils.createOrConvertDateTimeSecound(),
               data: data.data);
 
           final request = store!.store.add<JSNumber>(obj);
@@ -249,17 +276,90 @@ class IDatabaseTableJSStructA
       },
     );
     await completer.wait;
-    return true;
   }
 
   @override
-  Future<bool> writeAll(
-      IDatabaseJS db, List<ITableInsertOrUpdateStructA> data) async {
-    if (data.isEmpty) return false;
+  Future<void> write(IDBDatabase db, ITableInsertOrUpdateStructA data,
+      {IDatabaseTableJsTransaction? store}) async {
+    return _write(db: db, data: data.toInnerStruct(), store: store);
+  }
+
+  Future<void> _writeAll(
+      IDBDatabase db, List<_ITableInsertOrUpdateStructA> data) async {
+    if (data.isEmpty) return;
+    if (data.length == 1) {
+      return _write(db: db, data: data.first);
+    }
+    final store = getStore(db);
+    final index = store.store.index("unique_index");
+    final request = index.getObject<IDatabaseTableJSStructAScheme?>([
+      data.first.storage.toJS,
+      data.first.storageId.toJS,
+      (data.first.key ?? '').toJS,
+      (data.first.keyA ?? '').toJS
+    ].toJS);
+
+    Completer putOrAdd(
+        IDatabaseTableJSStructAScheme? r, _ITableInsertOrUpdateStructA data) {
+      r ??= IDatabaseTableJSStructAScheme.setup(
+          storage: data.storage,
+          storageId: data.storageId,
+          key: data.key ?? '',
+          keyA: data.keyA ?? '',
+          createdAt:
+              IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
+          updateAt: IDatabaseUtils.createOrConvertDateTimeSecound(),
+          data: data.data);
+      if (r.id != null) {
+        r.data = data.data?.map((e) => e.toJS).toList().toJS;
+        r.updateAt = IDatabaseUtils.createOrConvertDateTimeSecound();
+        final request = store.store.put<JSNumber>(r);
+        return IDBRequestCompleter(
+          request: request,
+          onResult: (r) => null,
+        ).completer;
+        // await completer.wait;
+      } else {
+        final request = store.store.add<JSNumber>(r);
+        return IDBRequestCompleter(request: request, onResult: (r) => null)
+            .completer;
+      }
+    }
+
+    final completer = IDBRequestCompleter(
+      request: request,
+      onResult: (result) {
+        return [
+          putOrAdd(result, data.first),
+          ...List.generate(data.length - 1, (l) {
+            final i = data[l + 1];
+            return IDBRequestCompleter(
+              request: index.getObject<IDatabaseTableJSStructAScheme?>([
+                i.storage.toJS,
+                i.storageId.toJS,
+                (i.key ?? '').toJS,
+                (i.keyA ?? '').toJS
+              ].toJS),
+              onResult: (result) {
+                return putOrAdd(result, i);
+              },
+            ).completer;
+          })
+        ];
+      },
+    );
+    final r = await completer.wait;
+    await Future.wait(r.map((e) => e.future));
+  }
+
+  @override
+  Future<void> writeAll(
+      IDBDatabase db, List<ITableInsertOrUpdateStructA> data) async {
+    if (data.isEmpty) return;
     if (data.length == 1) {
       return write(db, data.first);
     }
-    final store = db.getStore(this);
+    final store = getStore(db);
     final index = store.store.index("unique_index");
     final request = index.getObject<IDatabaseTableJSStructAScheme?>([
       data.first.storage.toJS,
@@ -270,7 +370,7 @@ class IDatabaseTableJSStructA
 
     Completer putOrAdd(
         IDatabaseTableJSStructAScheme? r, ITableInsertOrUpdateStructA data) {
-      r?.data = data.data.map((e) => e.toJS).toList().toJS;
+      r?.data = data.data?.map((e) => e.toJS).toList().toJS;
       r ??= IDatabaseTableJSStructAScheme.setup(
           storage: data.storage,
           storageId: data.storageId,
@@ -278,6 +378,7 @@ class IDatabaseTableJSStructA
           keyA: data.keyA ?? '',
           createdAt:
               IDatabaseUtils.createOrConvertDateTimeSecound(data.createdAt),
+          updateAt: IDatabaseUtils.createOrConvertDateTimeSecound(),
           data: data.data);
       if (r.id != null) {
         final request = store.store.put<JSNumber>(r);
@@ -317,7 +418,6 @@ class IDatabaseTableJSStructA
     );
     final r = await completer.wait;
     await Future.wait(r.map((e) => e.future));
-    return true;
   }
 
   @override
@@ -343,4 +443,85 @@ class IDatabaseTableJSStructA
 
   @override
   IDatabaseTableStruct get struct => IDatabaseTableStruct.a;
+
+  @override
+  Future<void> clearNullableColumn(
+      IDBDatabase db, ITableRemoveStructA query) async {
+    await _execute(
+        db: db,
+        key: query.key,
+        keyA: query.keyA,
+        storage: query.storage,
+        storageId: query.storageId,
+        remove: true,
+        removeNullabeData: true,
+        updatedAtGt: query.updatedAtGt,
+        updatedAtLt: query.updatedAtLt,
+        createdAtGt: query.createdAtGt,
+        createdAtLt: query.createdAtLt);
+  }
+
+  @override
+  Future<void> removeAllData(
+      IDBDatabase db, List<ITableRemoveStructA> queries) async {
+    final data = (await (Future.wait(queries.map((e) async {
+      return await readAll(
+          db,
+          ITableReadStructA(
+              tableName: tableName,
+              storage: e.storage,
+              storageId: e.storageId,
+              key: e.key,
+              keyA: e.keyA,
+              createdAtGt: e.createdAtGt,
+              createdAtLt: e.createdAtLt,
+              updatedAtGt: e.updatedAtGt,
+              updatedAtLt: e.updatedAtLt));
+    }))))
+        .expand((e) => e);
+    return _writeAll(
+        db,
+        data
+            .where((e) => e.data != null)
+            .map((e) => _ITableInsertOrUpdateStructA(
+                data: null,
+                storage: e.storage,
+                storageId: e.storageId,
+                key: e.key,
+                keyA: e.keyA))
+            .toList());
+  }
+
+  @override
+  Future<void> removeData(IDBDatabase db, ITableRemoveStructA query) async {
+    return removeAllData(db, [query]);
+  }
+}
+
+class _ITableInsertOrUpdateStructA {
+  final List<int>? data;
+  final int storage;
+  final int storageId;
+  final String? key;
+  final String? keyA;
+  final DateTime? createdAt;
+  const _ITableInsertOrUpdateStructA(
+      {required this.data,
+      required this.storage,
+      required this.storageId,
+      this.key,
+      this.keyA,
+      this.createdAt});
+}
+
+extension _ITableInsertHelper on ITableInsertOrUpdateStructA {
+  _ITableInsertOrUpdateStructA toInnerStruct() {
+    return _ITableInsertOrUpdateStructA(
+        data: data,
+        storage: storage,
+        storageId: storageId,
+        key: key,
+        keyA: keyA,
+        createdAt: createdAt);
+  }
 }

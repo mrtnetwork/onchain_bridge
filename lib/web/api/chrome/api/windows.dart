@@ -25,7 +25,6 @@ extension type ChromeWindows._(JSObject _) {
       int? height,
       bool? incognito,
       int? left,
-      // bool? setSelfAsOpener,
       int? tabId,
       int? top,
       String? url,
@@ -36,7 +35,6 @@ extension type ChromeWindows._(JSObject _) {
             height: height,
             incognito: incognito,
             left: left,
-            // setSelfAsOpener: setSelfAsOpener,
             tabId: tabId,
             top: top,
             type: type,
@@ -119,7 +117,6 @@ extension type ChromeWindowsCreateData._(JSObject _) implements JSAny {
       int? height,
       bool? incognito,
       int? left,
-      // bool? setSelfAsOpener,
       int? tabId,
       int? top,
       String? url,
@@ -130,7 +127,6 @@ extension type ChromeWindowsCreateData._(JSObject _) implements JSAny {
   external int? get height;
   external bool? get incognito;
   external int? get left;
-  // external bool? get setSelfAsOpener;
   external int? get tabId;
   external int? get top;
   external String? get url;

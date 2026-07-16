@@ -11,8 +11,4 @@ class IDatabaseUtils {
   static DateTime dateTimeFromSconds(int seconds) {
     return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
   }
-
-  // static DateTime nowAsSeconds(int seconds) {
-  //   return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
-  // }
 }

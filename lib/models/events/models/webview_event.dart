@@ -9,7 +9,7 @@ class WebViewEvent {
   final String? title;
   final String? message;
   final int? progress;
-  final WalletEvent? request;
+  final JSWalletEventDart? request;
   const WebViewEvent(
       {required this.eventName,
       required this.viewId,
@@ -32,7 +32,7 @@ class WebViewEvent {
         title: json["title"],
         request: json["request"] == null
             ? null
-            : WalletEvent.fromJson(
+            : JSWalletEventDart.fromJson(
                 (json["request"] as Map).cast(), WalletEventTarget.external));
   }
 }
