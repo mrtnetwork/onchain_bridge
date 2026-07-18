@@ -17,13 +17,13 @@ class IDatabseInterfaceIo extends DefaultDetabaseApi<IDatabaseIo> {
   final AppPath appPath;
   final String dbName;
   final SafeAtomicLock _lock = SafeAtomicLock();
+  final String liberaryName;
   IDatabaseIo? _databases;
-
-  IDatabseInterfaceIo({required this.dbName, required this.appPath});
+  IDatabseInterfaceIo(
+      {required this.dbName, required this.appPath, required this.liberaryName});
 
   Future<String> _getOrCreateDatabase(List<int> keyBytes) async {
-    final checksum =
-        BytesUtils.toHexString(QuickCrypto.blake2b128Hash(keyBytes));
+    final checksum = BytesUtils.toHexString(QuickCrypto.blake2b128Hash(keyBytes));
     final path = appPath.toDirectoryPath(
       directory: AppPathDirectory.support,
       relativePath: IDatabaseConst.dbFolderName,
@@ -45,8 +45,7 @@ class IDatabseInterfaceIo extends DefaultDetabaseApi<IDatabaseIo> {
     return _lock.run(() async {
       final database = _databases;
       if (database != null) return Ok(null);
-      final libPath =
-          OnChainBridgeIoUtils.getDynamicLiberaryPath("libsqlite3mc");
+      final libPath = OnChainBridgeIoUtils.getDynamicLiberaryPath(liberaryName);
       if (libPath == null) {
         return Err(IDatabaseException.unsupportedPlatform);
       }
@@ -125,8 +124,7 @@ class NativePlatformStorage implements PlatformStorage {
   @override
   Future<bool> hasStorage(String key) async {
     final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"key": key, "type": "containsKey"});
+        NativeMethodsConst.secureStorageMethod, {"key": key, "type": "containsKey"});
 
     return data;
   }
@@ -137,8 +135,8 @@ class NativePlatformStorage implements PlatformStorage {
       final keys = await readKeysStorage(prefix: prefix);
       return readMultipleStorage(keys);
     }
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod, {"type": "readAll"});
+    final data = await _channel
+        .invokeMethod(NativeMethodsConst.secureStorageMethod, {"type": "readAll"});
 
     Map<String, String> values = Map<String, String>.from(data!);
     if (prefix != null) {
@@ -150,8 +148,7 @@ class NativePlatformStorage implements PlatformStorage {
   @override
   Future<Map<String, String>> readMultipleStorage(List<String> keys) async {
     final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"keys": keys, "type": "readMultiple"});
+        NativeMethodsConst.secureStorageMethod, {"keys": keys, "type": "readMultiple"});
 
     return Map<String, String>.from(data);
   }
@@ -166,8 +163,7 @@ class NativePlatformStorage implements PlatformStorage {
 
   @override
   Future<List<String>> readKeysStorage({String? prefix}) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
+    final data = await _channel.invokeMethod(NativeMethodsConst.secureStorageMethod,
         {"key": prefix ?? '', "type": "readKeys"});
     return (data as List).cast<String>();
   }
@@ -178,16 +174,15 @@ class NativePlatformStorage implements PlatformStorage {
       final keys = await readKeysStorage(prefix: prefix);
       return removeMultipleStorage(keys);
     }
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod, {"type": "removeAll"});
+    final data = await _channel
+        .invokeMethod(NativeMethodsConst.secureStorageMethod, {"type": "removeAll"});
 
     return data;
   }
 
   @override
   Future<bool> writeSecure(String key, String value) async {
-    final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
+    final data = await _channel.invokeMethod(NativeMethodsConst.secureStorageMethod,
         {"type": "write", "key": key, "value": value});
 
     return data;
@@ -203,8 +198,7 @@ class NativePlatformStorage implements PlatformStorage {
   @override
   Future<bool> removeMultipleStorage(List<String> keys) async {
     final data = await _channel.invokeMethod(
-        NativeMethodsConst.secureStorageMethod,
-        {"keys": keys, "type": "removeMultiple"});
+        NativeMethodsConst.secureStorageMethod, {"keys": keys, "type": "removeMultiple"});
     return data;
   }
 }
