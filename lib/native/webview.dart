@@ -75,7 +75,7 @@ class WebViewIoInterface implements PlatformWebViewInterface {
       _WebViewConst.webView,
       {"type": type, "id": viewType, ...args},
     );
-    return result;
+    return JsonParser.valueAs<T>(result);
   }
 
   @override
@@ -114,12 +114,12 @@ class WebViewIoInterface implements PlatformWebViewInterface {
 
   @override
   Future<bool> canGoBack(String viewType) {
-    return _call(type: _WebViewConst.canGoBack, viewType: viewType);
+    return _call<bool>(type: _WebViewConst.canGoBack, viewType: viewType);
   }
 
   @override
   Future<bool> canGoForward(String viewType) {
-    return _call(viewType: viewType, type: _WebViewConst.canGoForward);
+    return _call<bool>(viewType: viewType, type: _WebViewConst.canGoForward);
   }
 
   @override

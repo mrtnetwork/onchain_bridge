@@ -7,20 +7,16 @@ class _IoPlatformConst {
 }
 
 class IoNativeChannel {
-  final MethodChannel channel =
-      MethodChannel(NativeMethodsConst.channelAuthory);
-  final EventChannel networkChannel = EventChannel(
-      'com.mrtnetwork.on_chain_bridge.methodChannel/network_status');
+  final MethodChannel channel = MethodChannel(NativeMethodsConst.channelAuthory);
+  final EventChannel networkChannel =
+      EventChannel('com.mrtnetwork.on_chain_bridge.methodChannel/network_status');
   late final Stream<AppNativeEvent> networkChannelStream = networkChannel
       .receiveBroadcastStream()
-      .map(
-          (event) => AppNativeEvent.fromJson(Map<String, dynamic>.from(event)));
+      .map((event) => AppNativeEvent.fromJson(Map<String, dynamic>.from(event)));
 }
 
-class IoPlatformInterface extends OnChainBridgeInterface<
-    PlatformCredentialIoResponse,
-    PlatformCredentialAutneticateIoRequest,
-    NativeFile> {
+class IoPlatformInterface extends OnChainBridgeInterface<PlatformCredentialIoResponse,
+    PlatformCredentialAutneticateIoRequest, NativeFile> {
   IoNativeChannel? _nativeChannel;
 
   Result<IoNativeChannel, IException> get channel {
@@ -77,19 +73,16 @@ class IoPlatformInterface extends OnChainBridgeInterface<
       [dynamic arguments]) async {
     try {
       return await channel.andThenAsync((channel) async {
-        final result = await channel.channel.invokeMethod<T>(method, arguments);
+        final result = await channel.channel.invokeMethod(method, arguments);
         return Ok(JsonParser.valueAs<T>(result));
       });
     } catch (e, trace) {
       Logging.danger(
         fn: () => LogDataDefault(
             runtime: runtimeType,
-            data: method == NativeMethodsConst.secureStorageMethod
-                ? null
-                : arguments,
+            data: method == NativeMethodsConst.secureStorageMethod ? null : arguments,
             trace: trace.toString(),
-            message:
-                "invlodeMethod failed. method: $method, error: ${e.toString()}",
+            message: "invlodeMethod failed. method: $method, error: ${e.toString()}",
             function: "invokeMethod"),
       );
       if (e case OnChainBridgeException()) {
@@ -105,16 +98,15 @@ class IoPlatformInterface extends OnChainBridgeInterface<
       if (!platform.isAndroid) {
         return Err(OnChainBridgeException.unsuported);
       }
-      final secure =
-          await invokeMethod<bool?>("secureFlag", {'secure': isSecure});
+      final secure = await invokeMethod<bool?>("secureFlag", {'secure': isSecure});
       return secure.map((e) => e ?? false);
     });
   }
 
   @override
   Future<Result<DeviceInfo, IException>> getDeviceInfo() async {
-    final data = await invokeMethod<Map<String, dynamic>>(
-        NativeMethodsConst.deviceInfo, {});
+    final data =
+        await invokeMethod<Map<String, dynamic>>(NativeMethodsConst.deviceInfo, {});
     return data.map((data) => DeviceInfo.fromJson(data));
   }
 
@@ -127,12 +119,7 @@ class IoPlatformInterface extends OnChainBridgeInterface<
           "path": null,
           "mimetype": null
         },
-      IShareFile<NativeFile>(
-        :final message,
-        :final subject,
-        :final file,
-        :final type
-      ) =>
+      IShareFile<NativeFile>(:final message, :final subject, :final file, :final type) =>
         {
           "text": message,
           "subject": subject,
@@ -147,17 +134,16 @@ class IoPlatformInterface extends OnChainBridgeInterface<
   @override
   Future<Result<AppPath, IException>> path(String applicationId) async {
     return platform.andThenAsync((platform) async {
-      final data = await invokeMethod<Map<String, dynamic>>(
-          NativeMethodsConst.pathMethod, {});
-      return data.map(
-          (data) => AppPath.fromJson(data, platform, Platform.pathSeparator));
+      final data =
+          await invokeMethod<Map<String, dynamic>>(NativeMethodsConst.pathMethod, {});
+      return data.map((data) => AppPath.fromJson(data, platform, Platform.pathSeparator));
     });
   }
 
   @override
   Future<Result<bool, IException>> launchUri(String uri) async {
-    final data = await invokeMethod<bool>(
-        NativeMethodsConst.launchUriMethod, {"uri": uri});
+    final data =
+        await invokeMethod<bool>(NativeMethodsConst.launchUriMethod, {"uri": uri});
     return data;
   }
 
@@ -225,8 +211,7 @@ class IoPlatformInterface extends OnChainBridgeInterface<
               platform: platform,
               features: [
                 if (barcode.ok() ?? false) PlatformFeatures.barcode,
-                if (Platform.isAndroid || Platform.isMacOS)
-                  PlatformFeatures.webview
+                if (Platform.isAndroid || Platform.isMacOS) PlatformFeatures.webview
               ],
               isExtension: false));
         });
@@ -235,13 +220,11 @@ class IoPlatformInterface extends OnChainBridgeInterface<
   }
 
   @override
-  late final Result<AppPlatform, IException> platform =
-      OnChainBridgeIoUtils.platform();
+  late final Result<AppPlatform, IException> platform = OnChainBridgeIoUtils.platform();
 
   @override
   Future<Result<String?, IException>> readClipboard() async {
-    final data =
-        await Clipboard.getData(Clipboard.kTextPlain).catchError((e) => null);
+    final data = await Clipboard.getData(Clipboard.kTextPlain).catchError((e) => null);
     return Ok(data?.text);
   }
 
@@ -267,8 +250,8 @@ class IoPlatformInterface extends OnChainBridgeInterface<
 
   @override
   Future<Result<TouchIdStatus, IException>> touchIdStatus() async {
-    final result = await invokeMethod<String>(NativeMethodsConst.authenticate,
-        {"type": NativeMethodsConst.touchIdStatus});
+    final result = await invokeMethod<String>(
+        NativeMethodsConst.authenticate, {"type": NativeMethodsConst.touchIdStatus});
     return result.map((e) => TouchIdStatus.fromName(e));
   }
 
@@ -281,13 +264,13 @@ class IoPlatformInterface extends OnChainBridgeInterface<
       "button_title": request.buttonTitle,
       "type": NativeMethodsConst.authenticate
     });
-    return result.andThenAsync(
-        (result) => request.verify(BiometricResult.fromName(result)));
+    return result
+        .andThenAsync((result) => request.verify(BiometricResult.fromName(result)));
   }
 
   @override
-  Future<Result<PlatformCredentialIoResponse?, IException>>
-      createPlatformCredential(PlatformCredentialRequest params) async {
+  Future<Result<PlatformCredentialIoResponse?, IException>> createPlatformCredential(
+      PlatformCredentialRequest params) async {
     final result = await invokeMethod<String>(NativeMethodsConst.authenticate, {
       "reason": params.reason,
       "title": params.title,
