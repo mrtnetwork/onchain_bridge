@@ -222,3 +222,4 @@ FlMethodResponse *OnChainBridgeUtils::handle_utils_calls(const gchar *method, Fl
         nullptr                      // No additional error details
         ));
 }
+

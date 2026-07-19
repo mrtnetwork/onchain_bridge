@@ -41,7 +41,7 @@ class IDatabseInterfaceIo extends DefaultDetabaseApi<IDatabaseIo> {
     });
   }
 
-  Future<Result<String?, IException>> openDatabase(String? key) async {
+  Future<Result<String?, IException>> openDatabase(String? encryptionKey) async {
     return _lock.run(() async {
       final database = _databases;
       if (database != null) return Ok(null);
@@ -55,16 +55,16 @@ class IDatabseInterfaceIo extends DefaultDetabaseApi<IDatabaseIo> {
       } on PlatformException {
         return Err(IDatabaseException.misingDatabaseLiberary);
       }
-
-      List<int>? keyBytes;
-      if (key != null) {
-        keyBytes = BytesUtils.tryFromHexString(key);
+      // final key = encryptionKey;
+      String eKey;
+      if (encryptionKey != null &&
+          StringUtils.isHexBytes(encryptionKey,
+              lengthInBytes: QuickCrypto.sha256DigestSize)) {
+        eKey = encryptionKey;
       } else {
-        keyBytes = QuickCrypto.generateRandom(QuickCrypto.sha256DigestSize);
+        eKey = QuickCrypto.generateRandomHex(QuickCrypto.sha256DigestSize);
       }
-      if (keyBytes == null || keyBytes.length != QuickCrypto.sha256DigestSize) {
-        return Err(IDatabaseException.unexpected("Invalid database key."));
-      }
+      List<int> keyBytes = BytesUtils.fromHexString(eKey);
       final open = library.lookupFunction<Sqlite3OpenNative, Sqlite3OpenDart>(
         'sqlite3_open',
       );
@@ -74,7 +74,7 @@ class IDatabseInterfaceIo extends DefaultDetabaseApi<IDatabaseIo> {
 
       final dbPath = await _getOrCreateDatabase(keyBytes);
       final path = dbPath.toNativeUtf8();
-      final keyStmt = "PRAGMA hexkey = '$key';".toNativeUtf8();
+      final keyStmt = "PRAGMA hexkey = '$eKey';".toNativeUtf8();
       final errMsg = SafePointer(calloc<Pointer<Utf8>>());
       final dbPtr = SafePointer(calloc<Pointer<Void>>());
       try {
@@ -97,7 +97,7 @@ class IDatabseInterfaceIo extends DefaultDetabaseApi<IDatabaseIo> {
           dbPointer: dbPtr,
           lib: library,
         );
-        return Ok(BytesUtils.toHexString(keyBytes));
+        return Ok(eKey);
       } finally {
         path.free();
         keyStmt.free();

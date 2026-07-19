@@ -44,7 +44,7 @@
 #define WM_HIDE "hide"
 #define WM_SHOW "show"
 #define WM_INIT "init"
-
+#include <unistd.h>
 class WindowsManager
 {
 public:
@@ -79,6 +79,7 @@ private:
     bool blur();
     bool hide();
     bool show();
+    gchar *get_asset_path(const gchar *relative);
     bool is_prevent_close_ = false;
 
     FlMethodChannel *channel;
@@ -151,6 +152,26 @@ bool WindowsManager::blur()
     didSomething = true;
 #endif
     return didSomething;
+}
+
+gchar *WindowsManager::get_asset_path(const gchar *relative)
+{
+    gchar *exe_path = g_file_read_link("/proc/self/exe", NULL);
+    if (!exe_path)
+        return NULL;
+
+    gchar *exe_dir = g_path_get_dirname(exe_path);
+
+    gchar *asset_path = g_build_filename(
+        exe_dir,
+        relative,
+        NULL
+    );
+
+    g_free(exe_dir);
+    g_free(exe_path);
+
+    return asset_path;
 }
 bool WindowsManager::close()
 {
@@ -678,6 +699,7 @@ bool WindowsManager::set_icon(const gchar *path)
     {
         return false;
     }
+    
 
 #if GTK_CHECK_VERSION(4, 0, 0)
     // GTK4: set application-wide default icon
@@ -726,7 +748,10 @@ FlMethodResponse *WindowsManager::handle_windows_manager_calls(const gchar *meth
             fl_value_get_type(path) == FL_VALUE_TYPE_STRING)
         {
             const gchar *string_path = fl_value_get_string(path);
-            bool success = set_icon(string_path);
+            gchar *full_path = get_asset_path(string_path);
+
+            bool success = set_icon(full_path);
+            g_free(full_path);
             g_autoptr(FlValue) result = fl_value_new_bool(success);
             return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
         }
