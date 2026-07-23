@@ -12,6 +12,9 @@ include(FetchContent)
 
 set(PLUGIN_NAME "on_chain_bridge_plugin")
 
+
+
+
 FetchContent_Declare(nuget
   URL "https://dist.nuget.org/win-x86-commandline/v6.0.0/nuget.exe"
   URL_HASH SHA256=04eb6c4fe4213907e2773e1be1bbbd730e9a655a3c9c58387ce8d4a714a5b9e1
@@ -72,7 +75,7 @@ set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_20)
-target_compile_options(${PLUGIN_NAME} PRIVATE /await)
+
 target_link_libraries(${PLUGIN_NAME} PRIVATE ${CMAKE_BINARY_DIR}/packages/Microsoft.Windows.ImplementationLibrary.${WIL_VERSION}/build/native/Microsoft.Windows.ImplementationLibrary.targets)
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")

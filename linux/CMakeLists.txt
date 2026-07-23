@@ -16,6 +16,9 @@ list(APPEND PLUGIN_SOURCES
   "on_chain_bridge_plugin.cc"
 )
 
+
+
+
 # Define the plugin library target. Its name must not be changed (see comment
 # on PLUGIN_NAME above).
 add_library(${PLUGIN_NAME} SHARED

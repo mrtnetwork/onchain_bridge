@@ -2,7 +2,7 @@ group 'com.mrtnetwork.on_chain_bridge'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.2.10'
+    ext.kotlin_version = '2.4.10'
     repositories {
         google()
         mavenCentral()
