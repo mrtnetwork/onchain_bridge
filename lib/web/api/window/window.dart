@@ -49,8 +49,7 @@ extension type Window._(JSObject _) implements WebEventStream {
   @JS("fetch")
   external JSPromise<Response> fetch(String resource);
   @JS("fetch")
-  external JSPromise<Response> fetchWithOption(
-      String resource, FetchOptions? options);
+  external JSPromise<Response> fetchWithOption(String resource, FetchOptions? options);
   @JS("webkit")
   external WebKit get webkit;
 
@@ -105,8 +104,7 @@ extension type Document._(JSObject _) implements JSObject, WebEventStream {
     return createElement(type);
   }
 
-  String downloadBlob(
-      {required List<int> fileBytes, required String fileName}) {
+  String downloadBlob({required List<int> fileBytes, required String fileName}) {
     final blob = Blob.fromBytes(fileBytes);
     final url = URL.createObjectURL(blob);
     downloadUrl(url: url, fileName: fileName);
@@ -212,8 +210,7 @@ extension type JSNavigator._(JSObject _) implements JSObject {
   bool get isFirefoxMobile {
     final ua = userAgent?.toLowerCase();
     if (ua == null) return false;
-    return ua.contains('fxios') ||
-        (ua.contains('firefox') && ua.contains('android'));
+    return ua.contains('fxios') || (ua.contains('firefox') && ua.contains('android'));
   }
 
   bool get isFirefox {
@@ -244,9 +241,7 @@ extension type JSNavigator._(JSObject _) implements JSObject {
   bool get isChrome {
     final ua = userAgent?.toLowerCase();
     if (ua == null) return false;
-    return (ua.contains('chrome') &&
-            !ua.contains('edge') &&
-            !ua.contains('opr')) ||
+    return (ua.contains('chrome') && !ua.contains('edge') && !ua.contains('opr')) ||
         isChromeMobile;
   }
 
@@ -272,12 +267,9 @@ extension type MediaDevices._(JSObject _) implements JSObject {
   external JSPromise<MediaStream> getUserMedia(JSAny? constraints);
 
   Future<MediaStream> getUserMedia_(
-      {bool video = true,
-      bool audio = false,
-      Map<String, dynamic>? constraints}) async {
+      {bool video = true, bool audio = false, Map<String, dynamic>? constraints}) async {
     final future =
-        getUserMedia((constraints ?? {"video": video, "audio": audio}).jsify())
-            .toDart;
+        getUserMedia((constraints ?? {"video": video, "audio": audio}).jsify()).toDart;
     return await future;
   }
 }
@@ -288,8 +280,7 @@ extension type BarcodeDetector._(JSObject _) implements JSObject {
   factory BarcodeDetector.withFormats(List<String> formats) {
     return BarcodeDetector({"formats": formats}.jsify());
   }
-  external JSPromise<JSArray<DetectedBarcode>> detect(
-      HTMLVideoElement imageBitmapSource);
+  external JSPromise<JSArray<DetectedBarcode>> detect(HTMLVideoElement imageBitmapSource);
   Stream<String> stream(HTMLVideoElement element,
           {Duration interval = const Duration(milliseconds: 300)}) =>
       Stream.periodic(interval)
@@ -333,8 +324,7 @@ extension type JSFileOption._(JSObject _) implements JSObject {
 
 @JS("File")
 extension type JSFile._(JSObject _) implements JSObject {
-  external JSFile(
-      JSArray<JSAny> fileBits, String fileName, JSFileOption? options);
+  external JSFile(JSArray<JSAny> fileBits, String fileName, JSFileOption? options);
   external JSArray<JSArrayBuffer>? get fileBits;
   // external String? get fileName;
   external String get name;
@@ -453,8 +443,7 @@ extension type Response._(JSObject _) implements JSObject {
 // }
 
 @JS("Worker")
-extension type Worker._(JSObject _)
-    implements JSObject, WebEventStream, IJSMessagePort {
+extension type Worker._(JSObject _) implements JSObject, WebEventStream, IJSMessagePort {
   external factory Worker(String? aURL, WorkerOptions? options);
   external String? get aURL;
   external WorkerOptions? get options;
@@ -466,8 +455,7 @@ extension type Worker._(JSObject _)
   external set onmessage(JSFunction? _);
 }
 extension type WorkerOptions._(JSObject _) implements JSObject {
-  external factory WorkerOptions(
-      {String? type, String? credentials, String? name});
+  external factory WorkerOptions({String? type, String? credentials, String? name});
 
   external String? get type;
   external set type(String? type);
@@ -484,8 +472,7 @@ extension type WebEvent<TARGET extends JSAny?>._(JSObject _)
   external String? get type;
 }
 @JS()
-extension type EventInit<TARGET extends JSAny?>._(JSObject _)
-    implements JSObject {
+extension type EventInit<TARGET extends JSAny?>._(JSObject _) implements JSObject {
   external bool? get bubbles;
   external bool? get cancelable;
   external bool? get composed;
@@ -497,11 +484,7 @@ extension type EventInit<TARGET extends JSAny?>._(JSObject _)
   external set detail(JSAny? detail);
   external set data(JSAny? data);
   external factory EventInit(
-      {bool? bubbles,
-      bool? cancelable,
-      bool? composed,
-      JSAny? detail,
-      JSAny? data});
+      {bool? bubbles, bool? cancelable, bool? composed, JSAny? detail, JSAny? data});
 
   List<int>? detailBytes() {
     return JsUtils.toDartBytes(detail);
@@ -509,8 +492,7 @@ extension type EventInit<TARGET extends JSAny?>._(JSObject _)
 }
 
 @JS("Event")
-extension type MessageEvent<T extends JSAny?>._(JSObject _)
-    implements WebEvent {
+extension type MessageEvent<T extends JSAny?>._(JSObject _) implements WebEvent {
   external factory MessageEvent();
   external T get data;
 }
@@ -522,8 +504,9 @@ extension type WebEventStream._(JSObject _) {
 
   external void dispatchEvent(WebEvent event);
 
-  ({Stream<T> stream, StreamController<T> controller})
-      stream<T extends JSObject?>(String type, {bool broadcast = false}) {
+  ({Stream<T> stream, StreamController<T> controller}) stream<T extends JSObject?>(
+      String type,
+      {bool broadcast = false}) {
     final StreamController<T> controller = switch (broadcast) {
       false => StreamController(),
       true => StreamController.broadcast()
@@ -557,8 +540,7 @@ extension type CustomEvent._(JSObject _) implements WebEvent {
 
     return CustomEvent(
       type,
-      EventInit(
-          bubbles: bubbles, cancelable: cancelable, detail: detail, data: data),
+      EventInit(bubbles: bubbles, cancelable: cancelable, detail: detail, data: data),
     );
   }
 }

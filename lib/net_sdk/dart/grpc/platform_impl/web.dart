@@ -4,13 +4,11 @@ import 'dart:js_interop';
 import 'dart:typed_data';
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:blockchain_utils/utils/utils.dart';
-import 'package:on_chain_bridge/dev/src/logging.dart';
 import 'package:on_chain_bridge/net_sdk/dart/grpc/core/gprc.dart';
 import 'package:on_chain_bridge/net_sdk/net_sdk.dart';
 import 'package:on_chain_bridge/web/api/api.dart';
 
-Future<Result<PlatformGrpc, NetResultStatus>> dartGrpcClient(
-    NetAddressInfo addr) async {
+Future<Result<PlatformGrpc, NetResultStatus>> dartGrpcClient(NetAddressInfo addr) async {
   return Ok(PlatformGrpcWeb(baseUrl: addr.url));
 }
 
@@ -69,8 +67,7 @@ class PlatformGrpcWeb implements PlatformGrpc {
       if (line.isEmpty) continue;
       final idx = line.indexOf(':');
       if (idx == -1) continue;
-      map[line.substring(0, idx).trim().toLowerCase()] =
-          line.substring(idx + 1).trim();
+      map[line.substring(0, idx).trim().toLowerCase()] = line.substring(idx + 1).trim();
     }
     return map;
   }
@@ -100,10 +97,8 @@ class PlatformGrpcWeb implements PlatformGrpc {
       );
       final arrBuffer = await response.arrayBuffer().toDart;
 
-      final decoder = _GrpcFrameDecoder()
-        ..addChunk(arrBuffer.toDart.asUint8List());
+      final decoder = _GrpcFrameDecoder()..addChunk(arrBuffer.toDart.asUint8List());
       final frames = decoder.drainFrames();
-      Logg.log("grpc web frames ${frames.length}");
       List<int>? message;
       int status = 0;
       String? statusMessage;
@@ -122,8 +117,7 @@ class PlatformGrpcWeb implements PlatformGrpc {
       }
       if (message == null) {
         return Err(Ok(AppGrpcError(
-            code: GrpcErrorCode.internal.code,
-            message: 'no message in response')));
+            code: GrpcErrorCode.internal.code, message: 'no message in response')));
       }
       return Ok(message);
     } catch (_) {
@@ -169,15 +163,13 @@ class PlatformGrpcWeb implements PlatformGrpc {
             if (value == null) continue;
             decoder.addChunk(value.toDart);
             final frames = decoder.drainFrames();
-            Logg.log("grpc web stream ${frames.length}");
             for (final f in frames) {
               if (f.isTrailer) {
                 final trailers = _parseTrailers(f.payload);
-                final status =
-                    int.tryParse(trailers['grpc-status'] ?? '0') ?? 0;
+                final status = int.tryParse(trailers['grpc-status'] ?? '0') ?? 0;
                 if (status != 0) {
-                  controller.addError(AppGrpcError(
-                      code: status, message: trailers['grpc-message']));
+                  controller.addError(
+                      AppGrpcError(code: status, message: trailers['grpc-message']));
                 }
               } else {
                 controller.add(f.payload);
@@ -187,8 +179,7 @@ class PlatformGrpcWeb implements PlatformGrpc {
         } catch (_) {
           if (!abort.signal.aborted) {
             controller.addError(AppGrpcError(
-                code: GrpcErrorCode.unavailable.code,
-                message: 'stream failed'));
+                code: GrpcErrorCode.unavailable.code, message: 'stream failed'));
           }
         } finally {
           released = true;

@@ -2,7 +2,6 @@ import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:blockchain_utils/utils/types/result.dart';
-import 'package:on_chain_bridge/dev/src/logging.dart';
 import 'package:on_chain_bridge/net_sdk/types/config.dart';
 import 'package:on_chain_bridge/web/api/window/window.dart';
 
@@ -10,8 +9,7 @@ import 'package:on_chain_bridge/web/api/window/window.dart';
 external Window? get jsWindowOrNull;
 
 @JS("fetch")
-external JSPromise<Response> fetchWithOption(
-    String resource, FetchOptions? options);
+external JSPromise<Response> fetchWithOption(String resource, FetchOptions? options);
 
 class JSFetchApi {
   static Headers _buildHeaders(Map<String, String>? headers) {
@@ -32,7 +30,6 @@ class JSFetchApi {
       headers: _buildHeaders(headers),
       body: (body != null) ? Uint8List.fromList(body).toJS : null,
     );
-    Logg.error("befor send $body $method ${url.toString()}");
     final future = jsWindowOrNull?.fetchWithOption(url.toString(), options) ??
         fetchWithOption(url.toString(), options);
 
@@ -57,8 +54,8 @@ class JSFetchApi {
       }
 
       final option = buildOptions();
-      final future = jsWindowOrNull?.fetchWithOption(url, option) ??
-          fetchWithOption(url, option);
+      final future =
+          jsWindowOrNull?.fetchWithOption(url, option) ?? fetchWithOption(url, option);
       final result = await future.toDart;
       if (result.ok) {
         if (allowStatus == null || allowStatus.contains(result.status)) {
